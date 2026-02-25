@@ -10,10 +10,9 @@
   --bg-surface-hover: #2A2A32;
   --border-color: #3F3F46;
 
-  /* Textos y Tipografía */
+  
   --text-primary: #EDEDED;
   --text-secondary: #A1A1AA;
-  /* Combinamos Inter con tu stack de fuentes como respaldo seguro */
   --font-main: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
   /* Acentos de Juego */
@@ -95,7 +94,6 @@ ul, ol {
 
 .card-grid {
   display: grid;
-  /* Esto hace la cuadrícula responsive automáticamente sin media queries */
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
   gap: 1rem;
   margin-top: 1.5rem;
@@ -157,10 +155,7 @@ ul, ol {
   background-color: var(--border-color);
 }
 
-/* =========================================
-   ESTILOS DE INPUTS Y BOTONES
-   ========================================= */
-
+/* botonoes */
 .input-group {
   display: flex;
   flex-direction: column;
@@ -203,12 +198,10 @@ ul, ol {
   cursor: pointer;
 }
 
-/* Estilo magic*/
 .is-magic {
   background: linear-gradient(135deg, #1E1E24 0%, #4F46E5 100%);
 }
 
-/* Estilos pokemon*/
 .is-pokemon {
   background: linear-gradient(135deg, #1E1E24 0%, #FF5252 100%);
 }
@@ -221,4 +214,21 @@ ul, ol {
   border: none;
   font-weight: bold;
   cursor: pointer;
+}
+
+
+.btn-primary.is-neutral {
+  background-color: #A855F7; 
+  color: white;
+  padding: 0.875rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-primary.is-neutral:hover {
+  background-color: #9333EA; 
+  transform: scale(0.98);
 }

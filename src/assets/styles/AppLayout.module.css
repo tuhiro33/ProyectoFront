@@ -1,0 +1,11 @@
+.layoutContainer {
+  display: flex;
+  min-height: 100vh; /* Ocupa todo el alto de la pantalla */
+  background-color: var(--bg-main, #121212);
+}
+
+.mainContent {
+  flex: 1; /* Esto empuja la barra lateral a su tamaño y ocupa el resto */
+  padding: 2rem;
+  overflow-y: auto; /* Si hay muchas cartas, solo esta parte hace scroll, la barra lateral se queda quieta */
+}
