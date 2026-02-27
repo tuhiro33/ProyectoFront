@@ -14,9 +14,9 @@ const Sidebar: React.FC = () => {
     <aside className={styles.sidebar}>
       
       {/* Branding / Logo */}
-      <Link to="/mi-boveda" className={styles.brand}>
+      <Link to="/Home" className={styles.brand}>
         <img src={logoApp} alt="Logo" className={styles.logo} />
-        <span className={styles.brandName}>La Bóveda</span>
+        <span className={styles.brandName}>Cartas</span>
       </Link>
 
       <hr className={styles.divider} />
@@ -25,7 +25,7 @@ const Sidebar: React.FC = () => {
       <ul className={styles.navList}>
         <li>
           {/* Si isActive es true, le agrega la clase 'active' */}
-          <Link to="/mi-boveda" className={`${styles.navLink} ${isActive('/mi-boveda') ? styles.active : ''}`}>
+          <Link to="/Home" className={`${styles.navLink} ${isActive('/mi-boveda') ? styles.active : ''}`}>
             🏠 <span className={styles.linkText}>Dashboard</span>
           </Link>
         </li>
@@ -50,9 +50,9 @@ const Sidebar: React.FC = () => {
 
       {/* Perfil de Usuario (Dropdown falso por ahora) */}
       <div className={styles.userProfile}>
-        <img src="https://github.com/mdo.png" alt="Perfil" className={styles.avatar} />
+        <img src="https://pbs.twimg.com/media/HBxw4A6awAAxcwd?format=jpg&name=large" alt="Perfil" className={styles.avatar} />
         <div className={styles.userInfo}>
-          <strong>Usuario</strong>
+          <strong>Tomas</strong>
           <span className={styles.userRole}>Coleccionista</span>
         </div>
       </div>

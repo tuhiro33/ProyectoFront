@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../../assets/styles/home.module.css';
+import logoApp from '../../assets/images/Logo.png';
 
 // Base de datos simulada para nuestro álbum
 const featuredCards = [
@@ -16,17 +17,16 @@ const HomePage = () => {
   return (
     <div className={styles.homeContainer}>
       
-      {/* ================= HEADER COMPLETO ================= */}
       <header className={styles.header}>
         <div className={styles.logoGroup}>
-          <div className={styles.logoIcon}></div>
+          <div className={styles.logoIcon}><img src={logoApp} alt="el logo deberia ir... aqui?" className={styles.logoIcon} /></div>
           <span className={styles.logoText}>*nombre de la aplicacion que se me ocurrio en el momento*</span>
         </div>
         
         <nav className={styles.navLinks}>
           <a href="#caracteristicas">Mi coleccion</a>
           <a href="#mercado">Mercado</a>
-          <a href="#Publicaciones">Publicaciones de cartas</a>
+          <a href="#Publicaciones"><Link to="/mercado">Publicaciones de cartas</Link></a>
         </nav>
 
         <div className={styles.headerActions}>
@@ -35,7 +35,7 @@ const HomePage = () => {
         </div>
       </header>
 
-      {/* ================= HERO SECTION ================= */}
+
       <section className={styles.hero}>
         <h1 className={styles.title}>El santuario definitivo para tus colecciones</h1>
         <p className={styles.subtitle}>
@@ -46,7 +46,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ================= SECCIÓN DEL ÁLBUM ================= */}
       <section className={styles.albumSection} id="mercado">
         <div className={styles.albumHeader}>
           <h2>Descubre el Mercado</h2>
@@ -74,13 +73,12 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ================= FOOTER PROFESIONAL ================= */}
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
           
           <div className={styles.footerBrand}>
-            <h3>La Bóveda TCG</h3>
-            <p>Construido por y para coleccionistas. Mantén tu colección segura, valorada y organizada.</p>
+            <h3>La Pagina sin un nombre</h3>
+            <p>Construido por y para coleccionistas.</p>
           </div>
 
           <div className={styles.footerLinksGrid}>

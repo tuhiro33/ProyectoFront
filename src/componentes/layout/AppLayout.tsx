@@ -1,21 +1,18 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar'; // Importamos tu barra lateral
-import styles from './AppLayout.module.css';
+import Sidebar from '../layout/Sidebar';
+import styles from '../../assets/styles/AppLayout.module.css';
 
-const AppLayout: React.FC = () => {
+const AppLayout = () => {
   return (
     <div className={styles.layoutContainer}>
-      
-      {/* 1. La Barra Lateral (Siempre fija a la izquierda) */}
+      {/* 1. Tu barra lateral fija a la izquierda */}
       <Sidebar />
 
-      {/* 2. El Área Principal (Lo que cambia) */}
+      {/* 2. El hueco donde aparecerá el Mercado o la Bóveda */}
       <main className={styles.mainContent}>
-        {/* Aquí React inyectará el Dashboard, o el Mercado, etc. */}
         <Outlet /> 
       </main>
-
     </div>
   );
 };
