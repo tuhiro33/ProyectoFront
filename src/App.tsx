@@ -4,7 +4,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/Auth/Login';
 import HomePage from './pages/Home/Home';
 import MarketplacePage from './pages/Marketplace/Marketplace';
-
+import RegisterPage from './pages/Auth/Register';
+import ColeccionPage from './pages/Coleccion/Coleccion';
+import AgregarCPage from './pages/Coleccion/AgregarCarta';
 import AppLayout from './componentes/layout/AppLayout';
 
 function App() {
@@ -17,10 +19,10 @@ function App() {
             ========================================= */}
         {/* Si entran a la raíz (/), los mandamos al Home */}
         <Route path="/" element={<Navigate to="/Home" replace />} />
-        
         <Route path="/Home" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        
+        <Route path="/registro" element={<RegisterPage />} />
+
         {/* =========================================
             2. RUTAS PRIVADAS (El AppLayout "abraza" a estas pantallas CON Sidebar)
             ========================================= */}
@@ -28,11 +30,8 @@ function App() {
           
           {/* Como /mercado está aquí adentro, forzosamente dibujará el Sidebar */}
           <Route path="/mercado" element={<MarketplacePage />} />
-          
-          {/* Aquí puedes ir descomentando tus futuras pantallas */}
-          {/* <Route path="/mi-boveda" element={<DashboardPage />} /> */}
-          {/* <Route path="/coleccion" element={<ColeccionPage />} /> */}
-          
+          <Route path="/coleccion" element={<ColeccionPage />} />
+          <Route path="/AgregarC" element={<AgregarCPage />} />          
         </Route>
 
         {/* =========================================

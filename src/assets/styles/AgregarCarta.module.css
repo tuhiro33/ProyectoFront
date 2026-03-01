@@ -1,0 +1,186 @@
+/* src/pages/Coleccion/AgregarCarta.module.css */
+
+.agregarContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   CABECERA Y BUSCADOR (Fondo Dinámico)
+   ========================================= */
+.searchHeader {
+  border: 1px solid #3F3F46;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: background 0.5s ease;
+}
+
+/* Clases dinámicas para el fondo según el juego */
+.bgMagic {
+  background: radial-gradient(circle at top, rgba(49, 46, 129, 0.4) 0%, #1E1E24 100%);
+}
+
+.bgPokemon {
+  background: radial-gradient(circle at top, rgba(127, 29, 29, 0.4) 0%, #1E1E24 100%);
+}
+
+.searchHeader h1 {
+  font-size: 2.2rem;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+}
+
+/* Toggle para cambiar de juego */
+.gameToggle {
+  display: flex;
+  background-color: #121212;
+  border-radius: 8px;
+  padding: 0.25rem;
+  border: 1px solid #3F3F46;
+  margin-bottom: 2rem;
+}
+
+.toggleBtn {
+  padding: 0.5rem 1.5rem;
+  background: transparent;
+  color: #A1A1AA;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.toggleBtn.activeMagic {
+  background-color: #312E81; /* Índigo Magic */
+  color: white;
+}
+
+.toggleBtn.activePokemon {
+  background-color: #7F1D1D; /* Rojo Pokémon */
+  color: white;
+}
+
+/* Input de búsqueda */
+.searchInputWrapper {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  background-color: #121212;
+  border: 2px solid #3F3F46;
+  border-radius: 12px;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #A855F7;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+}
+
+.loadingText {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #A855F7;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* =========================================
+   CUADRÍCULA DE RESULTADOS
+   ========================================= */
+.resultsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.resultCard {
+  background-color: #1E1E24;
+  border: 1px solid #3F3F46;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+}
+
+.resultCard:hover {
+  transform: translateY(-5px);
+  border-color: #A855F7;
+}
+
+.cardImageWrapper {
+  height: 250px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cardImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardSet {
+  font-size: 0.8rem;
+  color: #A1A1AA;
+  margin-bottom: 1rem;
+}
+
+.addBtn {
+  margin-top: auto;
+  background-color: #A855F7;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.addBtn:hover {
+  background-color: #9333EA;
+}
+
+.emptyState {
+  text-align: center;
+  color: #A1A1AA;
+  padding: 3rem;
+  font-size: 1.1rem;
+}

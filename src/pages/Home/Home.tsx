@@ -24,14 +24,14 @@ const HomePage = () => {
         </div>
         
         <nav className={styles.navLinks}>
-          <a href="#caracteristicas">Mi coleccion</a>
+          <a href="#caracteristicas"><Link to="/coleccion">Mi coleccion</Link></a>
           <a href="#mercado">Mercado</a>
           <a href="#Publicaciones"><Link to="/mercado">Publicaciones de cartas</Link></a>
         </nav>
 
         <div className={styles.headerActions}>
           <Link to="/login" className="btn-secondary">Iniciar Sesión</Link>
-          <Link to="/login" className="btn-primary is-neutral">Registrarse</Link>
+          <Link to="/registro" className="btn-primary is-neutral">Registrarse</Link>
         </div>
       </header>
 

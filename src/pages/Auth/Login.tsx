@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from '../../assets/styles/Login.module.css';
+import { Link, useLocation } from 'react-router-dom';
 import logoApp from '../../assets/images/Logo.png';
 
 
@@ -74,7 +75,7 @@ function LoginPage() {
                   >
                     Iniciar Sesión
                   </button>
-                  <button type="button" className="btn-secondary">Crear Cuenta Nueva</button>
+                  <button type="button" className="btn-secondary"><Link to="/registro">Registrarse</Link></button>
                </div>
 
             </form>

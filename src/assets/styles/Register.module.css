@@ -1,0 +1,171 @@
+/* src/pages/Auth/Register.module.css */
+
+.splitLayout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-main, #121212);
+}
+
+/* =========================================
+   LADO IZQUIERDO: Branding Morado
+   ========================================= */
+.brandingSide {
+  flex: 1;
+  display: none; /* Se oculta en celulares */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  background: linear-gradient(135deg, #1E1E24 0%, rgba(168, 85, 247, 0.2) 100%);
+  border-right: 1px solid var(--border-color, #3F3F46);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Brillo de fondo para dar aspecto premium */
+.brandingSide::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.brandTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #A855F7 0%, #D946EF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brandSubtitle {
+  color: #A1A1AA;
+  font-size: 1.1rem;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   LADO DERECHO: Formulario de Registro
+   ========================================= */
+.formSide {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--bg-surface, #1E1E24);
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #3F3F46);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.formHeader {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.formHeader h2 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.formHeader p {
+  color: #A1A1AA;
+  font-size: 0.95rem;
+}
+
+.inputGroup {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.inputGroup label {
+  color: #EDEDED;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.inputControl {
+  padding: 0.85rem 1rem;
+  background-color: #121212;
+  border: 1px solid #3F3F46;
+  border-radius: 8px;
+  color: white;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.inputControl:focus {
+  outline: none;
+  border-color: #A855F7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 0.85rem;
+  background-color: #A855F7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem;
+}
+
+.submitBtn:hover {
+  background-color: #9333EA;
+}
+
+.loginPrompt {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #A1A1AA;
+  font-size: 0.9rem;
+}
+
+.loginLink {
+  color: #A855F7;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.loginLink:hover {
+  color: #D946EF;
+}
+
+.errorText {
+  color: #FF5252;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 900px) {
+  .brandingSide {
+    display: flex;
+  }
+}
