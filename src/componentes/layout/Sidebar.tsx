@@ -50,7 +50,7 @@ const Sidebar: React.FC = () => {
 
       {/* Perfil de Usuario (Dropdown falso por ahora) */}
       <div className={styles.userProfile}>
-        <img src="https://pbs.twimg.com/media/HBxw4A6awAAxcwd?format=jpg&name=large" alt="Perfil" className={styles.avatar} />
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwI-SIdNOEHGxNnr0zNVPf7TD4TaBAxahdSA&s" alt="Perfil" className={styles.avatar} />
         <div className={styles.userInfo}>
           <strong>Tomas</strong>
           <span className={styles.userRole}>Coleccionista</span>

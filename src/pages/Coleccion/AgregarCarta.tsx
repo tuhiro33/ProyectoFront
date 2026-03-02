@@ -83,7 +83,7 @@ const AgregarCartaPage = () => {
     <div className={styles.agregarContainer}>
       
       {/* Cabecera con fondo dinámico según el juego seleccionado */}
-      <div className={`${styles.searchHeader} ${juegoActivo === 'magic' ? styles.bgMagic : styles.bgPokemon}`}>
+      <div className={`${styles.searchHeader} ${juegoActivo === 'magic' ? 'is-magic' : 'is-pokemon'}`}>
         <h1>Buscar Cartas</h1>
         
         {/* Toggle para cambiar de API */}

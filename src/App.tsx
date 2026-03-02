@@ -14,29 +14,18 @@ function App() {
     <BrowserRouter>
       <Routes>
         
-        {/* =========================================
-            1. RUTAS PÚBLICAS (Ocupan toda la pantalla, SIN Sidebar)
-            ========================================= */}
-        {/* Si entran a la raíz (/), los mandamos al Home */}
+
         <Route path="/" element={<Navigate to="/Home" replace />} />
         <Route path="/Home" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/registro" element={<RegisterPage />} />
 
-        {/* =========================================
-            2. RUTAS PRIVADAS (El AppLayout "abraza" a estas pantallas CON Sidebar)
-            ========================================= */}
         <Route element={<AppLayout />}>
           
-          {/* Como /mercado está aquí adentro, forzosamente dibujará el Sidebar */}
           <Route path="/mercado" element={<MarketplacePage />} />
           <Route path="/coleccion" element={<ColeccionPage />} />
           <Route path="/AgregarC" element={<AgregarCPage />} />          
         </Route>
-
-        {/* =========================================
-            3. RUTA DE ERROR (404)
-            ========================================= */}
         <Route path="*" element={<h1 style={{ color: 'white', textAlign: 'center', marginTop: '2rem' }}>404 - Carta no encontrada</h1>} />
 
       </Routes>

@@ -1,10 +1,7 @@
-/* =========================================
-   SISTEMA DE DISEÑO: TCG MANAGER (Dark Theme)
-   ========================================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  /* Colores Base */
   --bg-main: #121212;
   --bg-surface: #1E1E24;
   --bg-surface-hover: #2A2A32;
