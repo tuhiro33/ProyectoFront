@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../../assets/styles/home.module.css';
 import logoApp from '../../assets/images/Logo.png';
+import { useAuth } from "../../context/AuthContext";
+
 
 // Base de datos simulada para nuestro álbum
 const featuredCards = [
@@ -14,24 +16,46 @@ const featuredCards = [
 ];
 
 const HomePage = () => {
+  const { isAuthenticated, logout } = useAuth();
+
   return (
     <div className={styles.homeContainer}>
-      
+
       <header className={styles.header}>
         <div className={styles.logoGroup}>
           <div className={styles.logoIcon}><img src={logoApp} alt="el logo deberia ir... aqui?" className={styles.logoIcon} /></div>
           <span className={styles.logoText}>*nombre de la aplicacion que se me ocurrio en el momento*</span>
         </div>
-        
+
         <nav className={styles.navLinks}>
-          <a href="#caracteristicas"><Link to="/coleccion">Mi coleccion</Link></a>
+          {/* <a href="#caracteristicas"><Link to="/coleccion">Mi coleccion</Link></a> */}
+          <Link to="/coleccion">Mi colección</Link>
           <a href="#mercado">Mercado</a>
           <a href="#Publicaciones"><Link to="/mercado">Publicaciones de cartas</Link></a>
         </nav>
 
         <div className={styles.headerActions}>
-          <Link to="/login" className="btn-secondary">Iniciar Sesión</Link>
-          <Link to="/registro" className="btn-primary is-neutral">Registrarse</Link>
+          {!isAuthenticated ? (
+            <>
+              <Link to="/login" className="btn-secondary">
+                Iniciar Sesión
+              </Link>
+
+              <Link to="/registro" className="btn-primary is-neutral">
+                Registrarse
+              </Link>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                logout();
+                window.location.href = "/";
+              }}
+              className="btn-secondary"
+            >
+              Logout
+            </button>
+          )}
         </div>
       </header>
 
@@ -56,7 +80,7 @@ const HomePage = () => {
           {featuredCards.map((card) => (
             <div key={card.id} className={styles.card}>
               <div className={`${styles.cardImage} ${card.color === 'magic' ? styles.bgMagic : styles.bgPokemon}`}>
-                 <span>{card.title.charAt(0)}</span>
+                <span>{card.title.charAt(0)}</span>
               </div>
               <div className={styles.cardBody}>
                 <h3>{card.title}</h3>
@@ -75,7 +99,7 @@ const HomePage = () => {
 
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
-          
+
           <div className={styles.footerBrand}>
             <h3>La Pagina sin un nombre</h3>
             <p>Construido por y para coleccionistas.</p>
@@ -88,7 +112,7 @@ const HomePage = () => {
               <a href="#">Precios</a>
               <a href="#">Actualizaciones</a>
             </div>
-            
+
             <div className={styles.linkColumn}>
               <h4>Soporte</h4>
               <a href="#">Centro de Ayuda</a>
