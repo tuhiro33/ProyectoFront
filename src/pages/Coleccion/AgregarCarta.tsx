@@ -16,28 +16,23 @@ const AgregarCartaPage = () => {
   const [resultados, setResultados] = useState<ResultadoBusqueda[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // 2. El Efecto de Búsqueda con "Debouncing"
-  useEffect(() => {
-    // Si el usuario borra el texto o escribe menos de 3 letras, limpiamos la pantalla
+ useEffect(() => {
     if (searchTerm.trim().length < 3) {
       setResultados([]);
       setIsSearching(false);
       return;
     }
 
-    // Iniciamos un temporizador. Si el usuario sigue escribiendo, este temporizador se reinicia.
-    // Solo hace la petición cuando el usuario hace una pausa de 500ms.
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
       
       try {
         if (juegoActivo === 'magic') {
-          // Búsqueda en Scryfall (Soporta nombres parciales)
+          // Búsqueda en Scryfall (Se queda igual)
           const res = await fetch(`https://api.scryfall.com/cards/search?q=${searchTerm}`);
           if (!res.ok) throw new Error('No se encontraron cartas');
           const data = await res.json();
           
-          // Mapeamos los datos de Scryfall a nuestra interfaz
           const mapeadoMagic = data.data.slice(0, 12).map((c: any) => ({
             api_id: c.id,
             nombre: c.name,
@@ -48,31 +43,33 @@ const AgregarCartaPage = () => {
           setResultados(mapeadoMagic);
         } 
         else {
-          // Búsqueda en Pokémon TCG (Usamos comodines * para búsqueda parcial)
-          const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:*${searchTerm}*&pageSize=12`);
+          // NUEVO: Búsqueda ultra rápida en TCGDex (En español)
+          const res = await fetch(`https://api.tcgdex.net/v2/es/cards?name=${searchTerm}`);
+          if (!res.ok) throw new Error('Error buscando en TCGDex');
+          
           const data = await res.json();
           
-          // Mapeamos los datos de Pokémon a nuestra interfaz
-          const mapeadoPokemon = data.data.map((c: any) => ({
+          // TCGDex devuelve el arreglo directamente. 
+          // Construimos la URL de la imagen en alta calidad agregando /high.webp
+          const mapeadoPokemon = data.slice(0, 12).map((c: any) => ({
             api_id: c.id,
             nombre: c.name,
-            imageUrl: c.images?.large || c.images?.small || '',
-            set_name: c.set.name,
+            imageUrl: c.image ? `${c.image}/high.webp` : '', 
+            set_name: `Set: ${c.id.split('-')[0].toUpperCase()}`,
             juego: 'pokemon'
           }));
           setResultados(mapeadoPokemon);
         }
       } catch (error) {
         console.error("Error en la búsqueda:", error);
-        setResultados([]); // Si no hay resultados o hay error, vaciamos la lista
+        setResultados([]); 
       } finally {
         setIsSearching(false);
       }
-    }, 500); // 500 milisegundos de espera
+    }, 500); 
 
-    // Cleanup: Limpia el temporizador si el componente se desmonta o el usuario teclea algo nuevo
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, juegoActivo]); // El efecto se dispara cuando cambia el texto o el juego
+  }, [searchTerm, juegoActivo]);
 
   // Función simulada para agregar a la base de datos
   const handleAgregarCarta = (carta: ResultadoBusqueda) => {

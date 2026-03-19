@@ -47,7 +47,6 @@ const ColeccionPage = () => {
   // Estado de la colección que incluye la URL de la imagen de la API
   const [coleccion, setColeccion] = useState<(ColeccionItem & { imageUrl?: string })[]>([]);
 
-  // Efecto para consumir las APIs de Magic y Pokémon al cargar la página
   useEffect(() => {
     const fetchImagesFromApis = async () => {
       const coleccionConImagenes = await Promise.all(
@@ -56,13 +55,15 @@ const ColeccionPage = () => {
 
           try {
             if (item.carta.juego === 'pokemon') {
-              // Fetch a Pokémon TCG API
-              const res = await fetch(`https://api.pokemontcg.io/v2/cards/${item.carta.api_id}`);
+              // NUEVO: Petición a TCGDex para obtener la imagen de la colección
+              const res = await fetch(`https://api.tcgdex.net/v2/es/cards/${item.carta.api_id}`);
               const data = await res.json();
-              imageUrl = data.data.images.large; 
+              
+              // Le añadimos /high.webp al string que nos da la API para máxima calidad
+              imageUrl = data.image ? `${data.image}/high.webp` : ''; 
             } 
             else if (item.carta.juego === 'magic') {
-              // Fetch a Scryfall API
+              // Scryfall (Se queda igual)
               const res = await fetch(`https://api.scryfall.com/cards/${item.carta.api_id}`);
               const data = await res.json();
               imageUrl = data.image_uris?.normal || ''; 
