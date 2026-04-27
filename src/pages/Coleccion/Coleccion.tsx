@@ -46,110 +46,164 @@ const mockMiColeccion: ColeccionItem[] = [
 const ColeccionPage = () => {
   // Estado de la colección que incluye la URL de la imagen de la API
   const [coleccion, setColeccion] = useState<(ColeccionItem & { imageUrl?: string })[]>([]);
-
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [saleForm, setSaleForm] = useState({
+    precio: '',
+    estado: 'NM',
+    imagen: null as File | null
+  });
   useEffect(() => {
     const fetchImagesFromApis = async () => {
       const coleccionConImagenes = await Promise.all(
         mockMiColeccion.map(async (item) => {
           let imageUrl = '';
-
           try {
             if (item.carta.juego === 'pokemon') {
-              // NUEVO: Petición a TCGDex para obtener la imagen de la colección
               const res = await fetch(`https://api.tcgdex.net/v2/es/cards/${item.carta.api_id}`);
               const data = await res.json();
-              
-              // Le añadimos /high.webp al string que nos da la API para máxima calidad
               imageUrl = data.image ? `${data.image}/high.webp` : ''; 
-            } 
-            else if (item.carta.juego === 'magic') {
-              // Scryfall (Se queda igual)
+            } else {
               const res = await fetch(`https://api.scryfall.com/cards/${item.carta.api_id}`);
               const data = await res.json();
               imageUrl = data.image_uris?.normal || ''; 
             }
-          } catch (error) {
-            console.error("Error cargando imagen para:", item.carta.nombre);
-          }
-
+          } catch (error) { console.error(error); }
           return { ...item, imageUrl };
         })
       );
-
       setColeccion(coleccionConImagenes);
     };
-
     fetchImagesFromApis();
   }, []);
 
-  // Función para eliminar una carta de la colección
-  const handleEliminarCarta = (idCarta: number, nombreCarta: string) => {
-    const confirmacion = window.confirm(`¿Estás seguro de que quieres eliminar "${nombreCarta}" de tu bóveda?`);
-    
-    if (confirmacion) {
-      // Filtramos la colección para quitar la carta que el usuario eliminó
-      setColeccion((prevColeccion) => prevColeccion.filter((item) => item.id !== idCarta));
-      
-      // En el futuro, aquí irá la petición a Go: 
-      // fetch(`http://localhost:8080/api/coleccion/${idCarta}`, { method: 'DELETE' })
+  const handleOpenSaleModal = (item: any) => {
+    setSelectedCard(item);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedCard(null);
+    setSaleForm({ precio: '', estado: 'NM', imagen: null });
+  };
+
+  const handleVenderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Subiendo a venta:", {
+      id_coleccion: selectedCard.id,
+      nombre: selectedCard.carta.nombre,
+      ...saleForm
+    });
+    alert(`La carta ${selectedCard.carta.nombre} se ha subido al mercado.`);
+    handleCloseModal();
+  };
+
+  const handleEliminarCarta = (id: number, nombre: string) => {
+    if (window.confirm(`¿Eliminar ${nombre}?`)) {
+      setColeccion(prev => prev.filter(i => i.id !== id));
     }
   };
 
   return (
     <div className={styles.coleccionContainer}>
-      
-      {/* ================= HEADER ================= */}
       <div className={styles.header}>
         <div>
           <h1>Mi Colección</h1>
           <p>Gestiona las cartas que posees en físico.</p>
         </div>
-        <button className="btn-primary is-neutral"><Link to="/AgregarC">Añadir Nueva Carta</Link></button>
+        <button className="btn-primary is-neutral">
+          <Link to="/AgregarC" style={{color: 'inherit', textDecoration: 'none'}}>Añadir Nueva Carta</Link>
+        </button>
       </div>
 
-      {/* ================= GRID DE CARTAS ================= */}
       <div className={styles.grid}>
         {coleccion.map((item) => (
           <div key={item.id} className={`${styles.card} ${item.es_foil ? styles.isFoil : ''}`}>
-            
-            {/* Badges de Cantidad y Foil */}
             <div className={styles.badgeContainer}>
               <span className={styles.qtyBadge}>x{item.cantidad}</span>
               {item.es_foil && <span className={styles.foilBadge}>Foil</span>}
             </div>
 
-            {/* Imagen consumida de la API */}
             <div className={styles.imageContainer}>
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.carta.nombre} className={styles.cardImage} />
-              ) : (
-                <span className={styles.loadingText}>Cargando API...</span>
-              )}
+              {item.imageUrl ? <img src={item.imageUrl} alt={item.carta.nombre} className={styles.cardImage} /> : <span className={styles.loadingText}>Cargando...</span>}
             </div>
 
-            {/* Información y Botones de Acción */}
             <div className={styles.cardInfo}>
               <h3 className={styles.cardTitle}>{item.carta.nombre}</h3>
-              <span className={styles.gameLabel}>
-                {item.carta.juego === 'magic' ? 'Magic: The Gathering' : 'Pokémon TCG'}
-              </span>
+              <span className={styles.gameLabel}>{item.carta.juego === 'magic' ? 'Magic: The Gathering' : 'Pokémon TCG'}</span>
               
               <div className={styles.cardActions}>
-                <button className={styles.actionBtn}>Al Mercado</button>
+                {/* BOTÓN QUE ABRE EL MODAL */}
                 <button 
-                  className={styles.deleteBtn}
-                  onClick={() => handleEliminarCarta(item.id, item.carta.nombre)}
-                  title="Eliminar carta"
+                  className={styles.actionBtn} 
+                  onClick={() => handleOpenSaleModal(item)}
                 >
-                  🗑️
+                  Al Mercado
                 </button>
+                <button className={styles.deleteBtn} onClick={() => handleEliminarCarta(item.id, item.carta.nombre)}>🗑️</button>
               </div>
-
             </div>
           </div>
         ))}
       </div>
 
+      {/* ================= MODAL DE VENTA ================= */}
+      {showModal && selectedCard && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2>Publicar para Venta</h2>
+            <strong className={styles.cardNameHighlight}>{selectedCard.carta.nombre}</strong>
+
+            <form className={styles.saleForm} onSubmit={handleVenderSubmit}>
+              <div className={styles.formGroup}>
+                <label>Estado de la Carta</label>
+                <select 
+                  value={saleForm.estado} 
+                  onChange={(e) => setSaleForm({...saleForm, estado: e.target.value})}
+                >
+                  <option value="NM">Near Mint (NM)</option>
+                  <option value="LP">Lightly Played (LP)</option>
+                  <option value="MP">Moderately Played (MP)</option>
+                  <option value="HP">Heavily Played (HP)</option>
+                  <option value="DMG">Damaged (DMG)</option>
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Precio de Venta ($)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="0.00" 
+                  required
+                  value={saleForm.precio}
+                  onChange={(e) => setSaleForm({...saleForm, precio: e.target.value})}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Foto Real de tu Carta</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  required
+                  onChange={(e) => setSaleForm({...saleForm, imagen: e.target.files ? e.target.files[0] : null})}
+                />
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className={styles.cancelBtn} onClick={handleCloseModal}>
+                  Cancelar
+                </button>
+                <button type="submit" className={styles.confirmBtn}>
+                  Publicar ahora
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

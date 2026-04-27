@@ -229,3 +229,231 @@
 .sellerName { color: #EDEDED; font-weight: 600; }
 .buyBtn { background-color: #A855F7; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease; }
 .buyBtn:hover { background-color: #9333EA; }
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+.buyModalContent {
+  background-color: #1E1E24;
+  border: 1px solid #3F3F46;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px; /* Es más ancho para mostrar foto y texto lado a lado */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  gap: 2rem;
+}
+
+/* En pantallas grandes, ponemos la foto a la izquierda y el texto a la derecha */
+@media (min-width: 768px) {
+  .modalBody {
+    flex-direction: row;
+  }
+}
+
+/* Imagen en el modal */
+.modalImageWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #121212;
+  border-radius: 12px;
+  border: 1px solid #3F3F46;
+  padding: 1rem;
+  min-height: 300px;
+}
+
+.modalLargeImage {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.modalPlaceholder {
+  font-size: 5rem;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Detalles a la derecha */
+.modalDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalDetails h2 {
+  font-size: 2rem;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.gameSubtitle {
+  color: #A855F7;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #3F3F46;
+}
+
+.detailLabel {
+  color: #A1A1AA;
+}
+
+.detailValue {
+  color: #EDEDED;
+  font-weight: 600;
+  text-align: right;
+}
+
+.priceHuge {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #D946EF;
+  margin: 1.5rem 0;
+  text-align: right;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.cancelBtn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #3F3F46;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background-color: #2A2A32;
+}
+
+.confirmBuyBtn {
+  flex: 2;
+  background-color: #A855F7;
+  border: none;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirmBuyBtn:hover {
+  background-color: #9333EA;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+}
+
+/* =========================================
+   MODAL DE DESCARGO DE RESPONSABILIDAD (FLOTANTE)
+   ========================================= */
+.disclaimerModalContent {
+  background-color: #1E1E24;
+  border: 2px solid #F59E0B; /* Borde ámbar para resaltar que es advertencia */
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  animation: modalAppear 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  z-index: 1001; /* Asegurar que esté por encima de todo */
+}
+
+.disclaimerModalContent h2 {
+  color: #F59E0B;
+  margin: 0;
+  font-size: 1.6rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.disclaimerText {
+  color: #EDEDED;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.disclaimerText p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.disclaimerText ul {
+  color: #A1A1AA;
+  padding-left: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.disclaimerText li {
+  margin-bottom: 0.5rem;
+}
+
+.acceptDisclaimerBtn {
+  background-color: #F59E0B;
+  color: #121212;
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.acceptDisclaimerBtn:hover {
+  background-color: #D97706;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}

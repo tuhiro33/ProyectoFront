@@ -40,7 +40,7 @@ const Sidebar: React.FC = () => {
           </Link>
         </li>
         <li>
-          <Link to="/ajustes" className={`${styles.navLink} ${isActive('/ajustes') ? styles.active : ''}`}>
+          <Link to="/Perfil" className={`${styles.navLink} ${isActive('/ajustes') ? styles.active : ''}`}>
             ⚙️ <span className={styles.linkText}>Ajustes</span>
           </Link>
         </li>
@@ -49,13 +49,13 @@ const Sidebar: React.FC = () => {
       <hr className={styles.divider} />
 
       {/* Perfil de Usuario (Dropdown falso por ahora) */}
-      <div className={styles.userProfile}>
+      <Link to="/Perfil" className={styles.userProfile} style={{ textDecoration: 'none' }}>
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwI-SIdNOEHGxNnr0zNVPf7TD4TaBAxahdSA&s" alt="Perfil" className={styles.avatar} />
         <div className={styles.userInfo}>
-          <strong>Tomas</strong>
+          <strong style={{ color: '#EDEDED' }}>Tomas</strong>
           <span className={styles.userRole}>Coleccionista</span>
         </div>
-      </div>
+      </Link>
 
     </aside>
   );
