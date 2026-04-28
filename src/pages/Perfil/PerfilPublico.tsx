@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from './PerfilPublico.module.css';
+import styles from '../../assets/styles/PerfilPublico.module.css';
 
 // ================= INTERFACES =================
 interface CartaCache {

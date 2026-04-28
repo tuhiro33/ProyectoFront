@@ -21,7 +21,7 @@ const RegisterPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -44,8 +44,33 @@ const RegisterPage = () => {
     });
 
     // Simulamos que el registro fue exitoso y lo mandamos al login
-    alert('¡Cuenta creada con éxito! Por favor inicia sesión.');
-    navigate('/login');
+    try {
+  const response = await fetch("http://localhost:8080/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      nombre_usuario: formData.nombre_usuario,
+      email: formData.email,
+      password: formData.password
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    setError(data.error || "Error al registrar usuario");
+    return;
+  }
+
+  alert("¡Cuenta creada con éxito!");
+  navigate("/login");
+
+} catch (err) {
+  console.error(err);
+  setError("No se pudo conectar con el servidor");
+}
   };
 
   return (

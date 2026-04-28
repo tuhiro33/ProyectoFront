@@ -1,7 +1,17 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
+interface Usuario {
+  id: number;
+  nombre_usuario: string;
+  email: string;
+  rol: string;
+  fecha_registro: string; // 👈 AGREGAR
+  foto_perfil: string;    // 👈 recomendable también
+}
+
 interface AuthContextType {
   token: string | null;
+  user: Usuario | null;
   isAuthenticated: boolean;
   logout: () => void;
 }
@@ -11,23 +21,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<Usuario | null>(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken) {
-      setToken(savedToken);
+  const savedToken = localStorage.getItem("token");
+
+  if (savedToken) {
+    setToken(savedToken);
+
+    fetch("http://localhost:8080/me", {
+      headers: {
+        Authorization: `Bearer ${savedToken}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setUser(data);
+      })
+      .catch(() => {
+        logout();
+      });
     }
   }, []);
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
+    setUser(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         token,
+        user,
         isAuthenticated: !!token,
         logout
       }}

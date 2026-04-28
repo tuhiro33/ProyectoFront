@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styles from '../../assets/styles/Sidebar.module.css';
 import logoApp from '../../assets/images/Logo.png';
+import { useAuth } from "../../context/AuthContext";
 
 const Sidebar: React.FC = () => {
   // Esto nos dice en qué URL estamos actualmente
@@ -10,9 +11,11 @@ const Sidebar: React.FC = () => {
   // Función auxiliar para saber si el link está activo
   const isActive = (path: string) => location.pathname === path;
 
+  const { user } = useAuth();
+
   return (
     <aside className={styles.sidebar}>
-      
+
       {/* Branding / Logo */}
       <Link to="/Home" className={styles.brand}>
         <img src={logoApp} alt="Logo" className={styles.logo} />
@@ -50,10 +53,20 @@ const Sidebar: React.FC = () => {
 
       {/* Perfil de Usuario (Dropdown falso por ahora) */}
       <Link to="/Perfil" className={styles.userProfile} style={{ textDecoration: 'none' }}>
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwI-SIdNOEHGxNnr0zNVPf7TD4TaBAxahdSA&s" alt="Perfil" className={styles.avatar} />
+        <img
+          src={user?.foto_perfil || "https://i.pravatar.cc/150"}
+          alt="Perfil"
+          className={styles.avatar}
+        />
+
         <div className={styles.userInfo}>
-          <strong style={{ color: '#EDEDED' }}>Tomas</strong>
-          <span className={styles.userRole}>Coleccionista</span>
+          <strong style={{ color: '#EDEDED' }}>
+            {user?.nombre_usuario || "Usuario"}
+          </strong>
+
+          <span className={styles.userRole}>
+            {user?.rol || "Sin rol"}
+          </span>
         </div>
       </Link>
 
