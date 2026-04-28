@@ -1,0 +1,204 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  animation: fadeIn 0.4s ease-in-out;
+  padding-bottom: 2rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   BANNER DE PERFIL (ESCAPARATE)
+   ========================================= */
+.profileHeader {
+  background-color: #1E1E24;
+  border: 1px solid #3F3F46;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.banner {
+  height: 150px;
+  background: linear-gradient(135deg, #312E81 0%, #A855F7 100%);
+  position: relative;
+}
+
+.avatarWrapper {
+  position: absolute;
+  bottom: -40px;
+  left: 30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid #1E1E24;
+  background: #121212;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userInfo {
+  padding: 50px 30px 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.userInfo h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: white;
+}
+
+.userMeta {
+  color: #A1A1AA;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* =========================================
+   SECCIONES Y CUADRÍCULAS
+   ========================================= */
+.sectionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  color: #ffffff;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #3F3F46;
+  display: inline-block;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+/* =========================================
+   TARJETAS DE CARTAS (Reutilizadas)
+   ========================================= */
+.card {
+  background-color: #1E1E24;
+  border: 1px solid #3F3F46;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: #A855F7;
+}
+
+.imageWrapper {
+  height: 220px;
+  width: 100%;
+  background-color: #121212;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.cardImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cardInfo {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardMeta {
+  color: #A1A1AA;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.badge {
+  display: inline-block;
+  background-color: #2A2A32;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  border: 1px solid #3F3F46;
+  margin-top: 0.5rem;
+}
+
+.priceTag {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #D946EF;
+  margin-top: auto;
+  text-align: right;
+}
+
+.buyBtn {
+  margin-top: 1rem;
+  width: 100%;
+  background-color: #A855F7;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.buyBtn:hover {
+  background-color: #9333EA;
+}
+
+.emptyState {
+  color: #A1A1AA;
+  font-style: italic;
+  padding: 2rem;
+  text-align: center;
+  background-color: #1E1E24;
+  border-radius: 12px;
+  border: 1px dashed #3F3F46;
+}

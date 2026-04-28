@@ -9,6 +9,7 @@ import ColeccionPage from './pages/Coleccion/Coleccion';
 import AgregarCPage from './pages/Coleccion/AgregarCarta';
 import PerfilPage from './pages/Perfil/Perfil';
 import AppLayout from './componentes/layout/AppLayout';
+import PerfilPublicoPage from './pages/Perfil/PerfilPublico';
 
 function App() {
   return (
@@ -26,7 +27,8 @@ function App() {
           <Route path="/mercado" element={<MarketplacePage />} />
           <Route path="/coleccion" element={<ColeccionPage />} />
           <Route path="/AgregarC" element={<AgregarCPage />} /> 
-          <Route path="/Perfil" element={<PerfilPage />} />           
+          <Route path="/Perfil" element={<PerfilPage />} />  
+          <Route path="/PerfilPublico" element={<PerfilPublicoPage />} />           
         </Route>
         <Route path="*" element={<h1 style={{ color: 'white', textAlign: 'center', marginTop: '2rem' }}>404 - Carta no encontrada</h1>} />
 
