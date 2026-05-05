@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../assets/styles/AgregarCarta.module.css';
+import { useAuth } from "../../context/AuthContext"
+import { agregarCartaAColeccion } from '../../services/cardService';
+import type { CardPayload } from '../../services/cardService';
 
 // 1. Interfaz unificada para nuestra interfaz gráfica
 interface ResultadoBusqueda {
@@ -11,6 +14,7 @@ interface ResultadoBusqueda {
 }
 
 const AgregarCartaPage = () => {
+  const { user } = useAuth();
   const [juegoActivo, setJuegoActivo] = useState<'magic' | 'pokemon'>('magic');
   const [searchTerm, setSearchTerm] = useState('');
   const [resultados, setResultados] = useState<ResultadoBusqueda[]>([]);
@@ -72,9 +76,33 @@ const AgregarCartaPage = () => {
   }, [searchTerm, juegoActivo]);
 
   // Función simulada para agregar a la base de datos
-  const handleAgregarCarta = (carta: ResultadoBusqueda) => {
-    alert(`Has agregado "${carta.nombre}" a tu bóveda.\n(Aquí conectaremos con tu backend en Go)`);
-  };
+ const handleAgregarCarta = async (carta: ResultadoBusqueda) => {
+  try {
+    if (!user || !user.id) {
+      alert("Debes iniciar sesión");
+      return;
+    }
+
+    // ✅ Estructura que coincide con dto.AgregarCartaRequest
+    const dataParaBackend: CardPayload = {
+      usuario_id: Number(user.id),
+      cantidad: 1,
+      es_foil: false,
+      carta: {                      // ← objeto anidado
+        api_id: carta.api_id,
+        juego: carta.juego,
+        nombre: carta.nombre,
+        url_imagen: carta.imageUrl, // ← mapear imageUrl → url_imagen
+      }
+    };
+
+    await agregarCartaAColeccion(dataParaBackend);
+    alert(`¡"${carta.nombre}" agregada!`);
+  } catch (error) {
+    console.error("Error al guardar:", error);
+    alert("Error al agregar la carta");
+  }
+};
 
   return (
     <div className={styles.agregarContainer}>
@@ -122,21 +150,14 @@ const AgregarCartaPage = () => {
       <div className={styles.resultsGrid}>
         {resultados.map((carta) => (
           <div key={carta.api_id} className={styles.resultCard}>
-            
             <div className={styles.cardImageWrapper}>
-              {carta.imageUrl ? (
-                <img src={carta.imageUrl} alt={carta.nombre} className={styles.cardImage} />
-              ) : (
-                <span style={{color: 'gray'}}>Sin Imagen</span>
-              )}
+              <img src={carta.imageUrl} alt={carta.nombre} className={styles.cardImage} />
             </div>
-
             <h3 className={styles.cardTitle}>{carta.nombre}</h3>
             <span className={styles.cardSet}>{carta.set_name}</span>
-            
             <button 
               className={styles.addBtn}
-              onClick={() => handleAgregarCarta(carta)}
+              onClick={() => handleAgregarCarta(carta)} // 3. LLAMADA AL SERVICIO
             >
               + Agregar a Colección
             </button>

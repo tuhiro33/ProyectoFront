@@ -105,7 +105,9 @@ function LoginPage() {
               >
                 Iniciar Sesión
               </button>
+              
               <button type="button" className="btn-secondary"><Link to="/registro">Registrarse</Link></button>
+              
             </div>
 
           </form>
