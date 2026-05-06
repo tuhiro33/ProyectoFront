@@ -81,39 +81,71 @@ const PerfilPage = () => {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formData.new_password !== formData.confirm_password) {
-      alert("Las contraseñas no coinciden. Por favor verifica.");
-      return;
+        alert("Las contraseñas no coinciden.");
+        return;
     }
 
-    const datosFinales = new FormData();
-    datosFinales.append('nombre_usuario', formData.nombre_usuario);
-    datosFinales.append('email', formData.email);
+    try {
+        let fotoPerfil = usuario.foto_perfil;
 
-    if (formData.new_password) {
-      datosFinales.append('password', formData.new_password);
+        // 1. Si hay foto nueva, subirla primero a Firebase
+        if (formData.foto_file) {
+            const uploadData = new FormData();
+            uploadData.append("image", formData.foto_file);
+
+            const uploadRes = await fetch("http://localhost:8080/upload", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: uploadData
+            });
+
+            if (!uploadRes.ok) throw new Error("Error al subir la imagen");
+
+            const uploadJson = await uploadRes.json();
+            fotoPerfil = uploadJson.url; // URL de Firebase
+        }
+
+        // 2. Actualizar datos del usuario
+        const body: Record<string, string> = {
+            nombre_usuario: formData.nombre_usuario,
+            email: formData.email,
+            foto_perfil: fotoPerfil
+        };
+
+        if (formData.new_password) {
+            body.password = formData.new_password;
+        }
+
+        const res = await fetch("http://localhost:8080/usuarios", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) throw new Error("Error al actualizar el perfil");
+
+        alert("¡Perfil actualizado correctamente!");
+
+        // Limpiar passwords
+        setFormData(prev => ({
+            ...prev,
+            new_password: '',
+            confirm_password: '',
+            foto_file: null
+        }));
+
+    } catch (error) {
+        console.error(error);
+        alert("Ocurrió un error al guardar los cambios");
     }
-
-    if (formData.foto_file) {
-      datosFinales.append('foto_perfil', formData.foto_file);
-    }
-
-    console.log("Enviando FormData a Go...");
-    for (let [key, value] of datosFinales.entries()) {
-      console.log(`${key}:`, value);
-    }
-
-    alert("¡Datos enviados con éxito!");
-
-    setFormData(prev => ({
-      ...prev,
-      new_password: '',
-      confirm_password: ''
-    }));
-  };
+};
 
   const fechaFormateada = new Date(usuario.fecha_registro).toLocaleDateString('es-ES', {
     year: 'numeric',
