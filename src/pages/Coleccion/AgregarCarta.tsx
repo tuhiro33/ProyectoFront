@@ -4,7 +4,6 @@ import { useAuth } from "../../context/AuthContext"
 import { agregarCartaAColeccion } from '../../services/cardService';
 import type { CardPayload } from '../../services/cardService';
 
-// 1. Interfaz unificada para nuestra interfaz gráfica
 interface ResultadoBusqueda {
   api_id: string;
   nombre: string;
@@ -20,7 +19,12 @@ const AgregarCartaPage = () => {
   const [resultados, setResultados] = useState<ResultadoBusqueda[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
- useEffect(() => {
+  // ✅ NUEVO: estados para el modal
+  const [cartaSeleccionada, setCartaSeleccionada] = useState<ResultadoBusqueda | null>(null);
+  const [cantidad, setCantidad] = useState(1);
+  const [esFoil, setEsFoil] = useState(false);
+
+  useEffect(() => {
     if (searchTerm.trim().length < 3) {
       setResultados([]);
       setIsSearching(false);
@@ -29,14 +33,11 @@ const AgregarCartaPage = () => {
 
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
-      
       try {
         if (juegoActivo === 'magic') {
-          // Búsqueda en Scryfall (Se queda igual)
           const res = await fetch(`https://api.scryfall.com/cards/search?q=${searchTerm}`);
           if (!res.ok) throw new Error('No se encontraron cartas');
           const data = await res.json();
-          
           const mapeadoMagic = data.data.slice(0, 12).map((c: any) => ({
             api_id: c.id,
             nombre: c.name,
@@ -45,20 +46,14 @@ const AgregarCartaPage = () => {
             juego: 'magic'
           }));
           setResultados(mapeadoMagic);
-        } 
-        else {
-          // NUEVO: Búsqueda ultra rápida en TCGDex (En español)
+        } else {
           const res = await fetch(`https://api.tcgdex.net/v2/es/cards?name=${searchTerm}`);
           if (!res.ok) throw new Error('Error buscando en TCGDex');
-          
           const data = await res.json();
-          
-          // TCGDex devuelve el arreglo directamente. 
-          // Construimos la URL de la imagen en alta calidad agregando /high.webp
           const mapeadoPokemon = data.slice(0, 12).map((c: any) => ({
             api_id: c.id,
             nombre: c.name,
-            imageUrl: c.image ? `${c.image}/high.webp` : '', 
+            imageUrl: c.image ? `${c.image}/high.webp` : '',
             set_name: `Set: ${c.id.split('-')[0].toUpperCase()}`,
             juego: 'pokemon'
           }));
@@ -66,71 +61,70 @@ const AgregarCartaPage = () => {
         }
       } catch (error) {
         console.error("Error en la búsqueda:", error);
-        setResultados([]); 
+        setResultados([]);
       } finally {
         setIsSearching(false);
       }
-    }, 500); 
+    }, 500);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, juegoActivo]);
 
-  // Función simulada para agregar a la base de datos
- const handleAgregarCarta = async (carta: ResultadoBusqueda) => {
-  try {
-    if (!user || !user.id) {
-      alert("Debes iniciar sesión");
-      return;
-    }
+  // ✅ NUEVO: abre el modal y resetea los valores
+  const handleSeleccionarCarta = (carta: ResultadoBusqueda) => {
+    setCartaSeleccionada(carta);
+    setCantidad(1);
+    setEsFoil(false);
+  };
 
-    // ✅ Estructura que coincide con dto.AgregarCartaRequest
+  // ✅ NUEVO: confirma y envía al backend
+  const handleConfirmarAgregar = async () => {
+    if (!cartaSeleccionada || !user?.id) return;
+
     const dataParaBackend: CardPayload = {
       usuario_id: Number(user.id),
-      cantidad: 1,
-      es_foil: false,
-      carta: {                      // ← objeto anidado
-        api_id: carta.api_id,
-        juego: carta.juego,
-        nombre: carta.nombre,
-        url_imagen: carta.imageUrl, // ← mapear imageUrl → url_imagen
+      cantidad,         // ← dinámico
+      es_foil: esFoil,  // ← dinámico
+      carta: {
+        api_id: cartaSeleccionada.api_id,
+        juego: cartaSeleccionada.juego,
+        nombre: cartaSeleccionada.nombre,
+        url_imagen: cartaSeleccionada.imageUrl,
       }
     };
 
-    await agregarCartaAColeccion(dataParaBackend);
-    alert(`¡"${carta.nombre}" agregada!`);
-  } catch (error) {
-    console.error("Error al guardar:", error);
-    alert("Error al agregar la carta");
-  }
-};
+    try {
+      await agregarCartaAColeccion(dataParaBackend);
+      alert(`¡"${cartaSeleccionada.nombre}" agregada!`);
+      setCartaSeleccionada(null); // cierra el modal
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      alert("Error al agregar la carta");
+    }
+  };
 
   return (
     <div className={styles.agregarContainer}>
-      
-      {/* Cabecera con fondo dinámico según el juego seleccionado */}
+
       <div className={`${styles.searchHeader} ${juegoActivo === 'magic' ? 'is-magic' : 'is-pokemon'}`}>
         <h1>Buscar Cartas</h1>
-        
-        {/* Toggle para cambiar de API */}
         <div className={styles.gameToggle}>
-          <button 
+          <button
             className={`${styles.toggleBtn} ${juegoActivo === 'magic' ? styles.activeMagic : ''}`}
             onClick={() => { setJuegoActivo('magic'); setSearchTerm(''); }}
           >
             Magic
           </button>
-          <button 
+          <button
             className={`${styles.toggleBtn} ${juegoActivo === 'pokemon' ? styles.activePokemon : ''}`}
             onClick={() => { setJuegoActivo('pokemon'); setSearchTerm(''); }}
           >
             Pokémon
           </button>
         </div>
-
-        {/* Input de Búsqueda */}
         <div className={styles.searchInputWrapper}>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder={`Busca una carta de ${juegoActivo === 'magic' ? 'Magic' : 'Pokémon'}...`}
             className={styles.searchInput}
             value={searchTerm}
@@ -140,7 +134,6 @@ const AgregarCartaPage = () => {
         </div>
       </div>
 
-      {/* Resultados de Búsqueda */}
       {searchTerm.length >= 3 && !isSearching && resultados.length === 0 && (
         <div className={styles.emptyState}>
           No se encontraron cartas con el nombre "{searchTerm}".
@@ -155,15 +148,62 @@ const AgregarCartaPage = () => {
             </div>
             <h3 className={styles.cardTitle}>{carta.nombre}</h3>
             <span className={styles.cardSet}>{carta.set_name}</span>
-            <button 
+            <button
               className={styles.addBtn}
-              onClick={() => handleAgregarCarta(carta)} // 3. LLAMADA AL SERVICIO
+              onClick={() => handleSeleccionarCarta(carta)} // ✅ abre modal
             >
               + Agregar a Colección
             </button>
           </div>
         ))}
       </div>
+
+      {/* ✅ NUEVO: Modal de cantidad y foil */}
+      {cartaSeleccionada && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2>Agregar a Colección</h2>
+            <strong>{cartaSeleccionada.nombre}</strong>
+
+            <div className={styles.formGroup}>
+              <label>Cantidad</label>
+              <input
+                type="number"
+                min={1}
+                max={99}
+                value={cantidad}
+                onChange={(e) => setCantidad(Number(e.target.value))}
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={esFoil}
+                  onChange={(e) => setEsFoil(e.target.checked)}
+                />
+                {' '}¿Es Foil?
+              </label>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setCartaSeleccionada(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.confirmBtn}
+                onClick={handleConfirmarAgregar}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

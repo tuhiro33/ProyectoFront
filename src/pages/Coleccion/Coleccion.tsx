@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../assets/styles/Coleccion.module.css';
-import { Link,useLocation} from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { obtenerColeccion, eliminarCartaDeColeccion } from '../../services/cardService';
 import type { ColeccionItem } from '../../services/cardService';
 import { useAuth } from "../../context/AuthContext";
+import { crearPublicacion } from '../../services/ventasService';
+import type { CrearPublicacionPayload } from '../../services/ventasService';
 
 
 
@@ -23,11 +25,11 @@ const ColeccionPage = () => {
 
   // 2. EFECTO PARA CARGAR DATOS REALES
   useEffect(() => {
-  const cargarDatos = async () => {
-    try {
-      
-      // VALIDACIÓN: Si no hay datos, detenemos la ejecución
-      if (!user || !user.id) {
+    const cargarDatos = async () => {
+      try {
+
+        // VALIDACIÓN: Si no hay datos, detenemos la ejecución
+        if (!user || !user.id) {
           console.warn("No se encontró usuario iniciado.");
           setLoading(false);
           return;
@@ -35,17 +37,17 @@ const ColeccionPage = () => {
 
         const data = await obtenerColeccion(Number(user.id));
         setColeccion(data);
-      
-      
-    } catch (error) {
-      console.error("Error al cargar colección:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  cargarDatos();
-}, [user]);
+
+      } catch (error) {
+        console.error("Error al cargar colección:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatos();
+  }, [user]);
 
   const handleOpenSaleModal = (item: any) => {
     setSelectedCard(item);
@@ -58,14 +60,50 @@ const ColeccionPage = () => {
     setSaleForm({ precio: '', estado: 'NM', imagen: null });
   };
 
- const handleVenderSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  // ✅ Verificamos que no sea null antes de acceder a sus propiedades
-  if (!selectedCard) return;
-  
-  alert(`La carta ${selectedCard.carta.nombre} se ha subido al mercado.`);
-  handleCloseModal();
-};
+  const handleVenderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCard) return;
+
+    try {
+      let fotoURL = selectedCard.carta.url_imagen; // fallback: imagen de la carta
+
+      // 1. Si el usuario subió una foto real, la subimos primero a Firebase
+      if (saleForm.imagen) {
+        const token = localStorage.getItem("token");
+        const uploadData = new FormData();
+        uploadData.append("image", saleForm.imagen);
+
+        const uploadRes = await fetch("http://localhost:8080/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: uploadData,
+        });
+
+        if (!uploadRes.ok) throw new Error("Error al subir la imagen");
+
+        const uploadJson = await uploadRes.json();
+        fotoURL = uploadJson.url; // ← URL de Firebase
+      }
+
+      // 2. Crear la publicación con la URL obtenida
+      const payload: CrearPublicacionPayload = {
+        coleccion_id: selectedCard.id,
+        precio: Number(saleForm.precio),
+        estado_carta: saleForm.estado,
+        foto_url: fotoURL,
+      };
+
+      await crearPublicacion(payload);
+      alert(`¡"${selectedCard.carta.nombre}" publicada en el mercado!`);
+      handleCloseModal();
+
+    } catch (error) {
+      console.error("Error al publicar:", error);
+      alert("No se pudo publicar la carta");
+    }
+  };
+
+
   // 3. ELIMINACIÓN REAL MEDIANTE SERVICIO
   const handleEliminarCarta = async (id: number, nombre: string) => {
     if (window.confirm(`¿Eliminar ${nombre} de tu colección?`)) {
@@ -90,7 +128,9 @@ const ColeccionPage = () => {
           <p>Gestiona las cartas que posees en físico.</p>
         </div>
         <button className="btn-primary is-neutral">
-          <Link to="/AgregarC" style={{ color: 'inherit', textDecoration: 'none' }}>Añadir Nueva Carta</Link>
+          <Link to="/AgregarC" className="btn-primary is-neutral" style={{ textDecoration: 'none' }}>
+            Añadir Nueva Carta
+          </Link>
         </button>
       </div>
 
@@ -129,7 +169,7 @@ const ColeccionPage = () => {
                     🗑️
                   </button>
                 </div>
-            </div>
+              </div>
             </div>
           ))
         )}
