@@ -46,6 +46,18 @@ export async function eliminarPublicacion(id: number): Promise<void> {
 }
 
 export async function obtenerMisPublicaciones(): Promise<PublicacionVenta[]> {
-  const res = await apiClient.get('/publicaciones/mis');
-  return res.data;
+  const res = await apiClient.get('/mis-publicaciones');
+  return Array.isArray(res.data) ? res.data : [];
 }
+
+// Cuenta las publicaciones activas para una entrada de colección específica
+export async function contarPublicacionesActivas(coleccionId: number): Promise<number> {
+ const res = await apiClient.get('/mis-publicaciones');
+  const todas: PublicacionVenta[] = Array.isArray(res.data) ? res.data : [];
+  return todas.filter(p => p.coleccion.id === coleccionId).length;
+}
+
+export async function marcarComoVendida(id: number): Promise<void> {
+  await apiClient.put(`/publicaciones/${id}/vendida`);
+}
+

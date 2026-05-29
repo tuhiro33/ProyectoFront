@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import styles from '../../assets/styles/PerfilPublico.module.css';
+import apiClient from '../../api/apiClient'; 
+import { useAuth } from '../../context/AuthContext'; 
 
-// ================= INTERFACES =================
+// ================= INTERFACES ALINEADAS AL BACKEND =================
+interface UsuarioDTO {
+  id: number;
+  nombre: string;
+  rol?: string;       
+  miembroDesde?: string;
+  avatar?: string;
+}
+
 interface CartaCache {
   api_id: string;
   juego: 'magic' | 'pokemon';
   nombre: string;
+  url_imagen: string; 
 }
 
 interface ColeccionItem {
@@ -13,72 +25,97 @@ interface ColeccionItem {
   cantidad: number;
   es_foil: boolean;
   carta: CartaCache;
-  imageUrl?: string; 
 }
 
 interface PublicacionVenta {
-  ID: number;
-  Precio: number;
-  EstadoCarta: string;
-  FotoURL: string;
-  Coleccion: { nombre_carta: string; juego: 'magic' | 'pokemon' };
+  id: number;
+  precio: number;
+  estado_carta: string;
+  foto_url: string;
+  coleccion: {
+    carta_nombre: string;
+    carta_juego: 'magic' | 'pokemon';
+    carta_imagen: string;
+  };
 }
 
-// ================= DATOS DE PRUEBA DEL USUARIO =================
-const usuarioPerfil = {
-  nombre: "Tomas",
-  rol: "Coleccionista",
-  ubicacion: "Delicias, Chihuahua",
-  avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwI-SIdNOEHGxNnr0zNVPf7TD4TaBAxahdSA&s",
-  miembroDesde: "2024"
-};
-
-const mockVentasUsuario: PublicacionVenta[] = [
-  {
-    ID: 201, Precio: 185.50, EstadoCarta: "LP",
-    FotoURL: "https://i.redd.it/lots-of-hype-for-the-lugia-v-alt-art-and-i-know-im-not-v0-oz84101wk6x91.jpg?width=3024&format=pjpg&auto=webp&s=1ba547e066031bb0c3e8903de6d6e1bc84073e4b", 
-    Coleccion: { nombre_carta: "Lugia V Alt Art", juego: "pokemon" }
-  },
-  {
-    ID: 202, Precio: 45.00, EstadoCarta: "NM",
-    FotoURL: "https://gatherer-static.wizards.com/Cards/medium/9EE93146CA14A256CD5C29FE40C394DDEFB749C2D8DC6FEB1AFAF3DCE97E5862.png", 
-    Coleccion: { nombre_carta: "Force of Will", juego: "magic" }
-  }
-];
-
-const mockColeccionUsuario: ColeccionItem[] = [
-  { id: 1, cantidad: 1, es_foil: true, carta: { api_id: "xy1-1", juego: "pokemon", nombre: "Venusaur EX" } },
-  { id: 2, cantidad: 4, es_foil: false, carta: { api_id: "0000579f-7b35-4ed3-b44c-db2a538066fe", juego: "magic", nombre: "Black Lotus" } }
-];
-
-// ================= COMPONENTE =================
 const PerfilPublico = () => {
-  const [coleccion, setColeccion] = useState<ColeccionItem[]>([]);
+  const { usuarioId } = useParams<{ usuarioId: string }>();
+  const { user: loggedInUser } = useAuth();
 
-  // Efecto para cargar las imágenes de la colección desde las APIs
+  const [usuario, setUsuario] = useState<UsuarioDTO | null>(null);
+  const [ventas, setVentas] = useState<PublicacionVenta[]>([]);
+  const [coleccion, setColeccion] = useState<ColeccionItem[]>([]);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const fetchImages = async () => {
-      const coleccionConImagenes = await Promise.all(
-        mockColeccionUsuario.map(async (item) => {
-          let imageUrl = '';
-          try {
-            if (item.carta.juego === 'pokemon') {
-              const res = await fetch(`https://api.tcgdex.net/v2/es/cards/${item.carta.api_id}`);
-              const data = await res.json();
-              imageUrl = data.image ? `${data.image}/high.webp` : ''; 
-            } else {
-              const res = await fetch(`https://api.scryfall.com/cards/${item.carta.api_id}`);
-              const data = await res.json();
-              imageUrl = data.image_uris?.normal || ''; 
-            }
-          } catch (error) { console.error(error); }
-          return { ...item, imageUrl };
-        })
-      );
-      setColeccion(coleccionConImagenes);
+    const cargarDatosPerfil = async () => {
+      if (!usuarioId) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // 1. Si el ID de la URL coincide con el usuario logueado, usamos sus datos de sesión de inmediato
+        if (loggedInUser && Number(loggedInUser.id) === Number(usuarioId)) {
+          setUsuario({
+            id: Number(loggedInUser.id),
+            nombre: loggedInUser.nombre_usuario || "Usuario",
+            rol: loggedInUser.rol || "Coleccionista",
+            miembroDesde: "2025",
+            avatar: loggedInUser.foto_perfil || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwI-SIdNOEHGxNnr0zNVPf7TD4TaBAxahdSA&s"
+          });
+        }
+
+        // 2. Ejecutamos las peticiones concurrentes a la base de datos
+        // ¡Añadimos la petición directa del perfil del usuario remoto!
+        const [resColeccion, resPublicaciones, resInfoUsuario] = await Promise.all([
+          apiClient.get(`/coleccion/${usuarioId}`),
+          apiClient.get('/publicaciones'),
+          apiClient.get(`/usuarios/perfil/${usuarioId}`) // 👈 Tu nuevo endpoint global
+        ]);
+
+        // Procesar colección filtrando los elementos con cantidad > 0
+        const coleccionData: ColeccionItem[] = Array.isArray(resColeccion.data) ? resColeccion.data : [];
+        const coleccionValida = coleccionData.filter(item => item.cantidad > 0);
+        setColeccion(coleccionValida);
+
+        // Filtrar publicaciones que correspondan al usuario de la URL
+        const todasLasPublicaciones: PublicacionVenta[] = Array.isArray(resPublicaciones.data) ? resPublicaciones.data : [];
+        const ventasUsuario = todasLasPublicaciones.filter(pub => {
+          return (pub as any).vendedor?.id === Number(usuarioId);
+        });
+        setVentas(ventasUsuario);
+
+        // 3. Si es un usuario externo, mapeamos la respuesta directa del backend
+        if (!loggedInUser || Number(loggedInUser.id) !== Number(usuarioId)) {
+          const datosRemotos = resInfoUsuario.data;
+          
+          setUsuario({
+            id: Number(usuarioId),
+            // Ajustamos las llaves según los nombres exactos que use tu dto.UsuarioResponse en Go
+            nombre: datosRemotos.nombre_usuario || datosRemotos.nombre || `Usuario #${usuarioId}`,
+            rol: datosRemotos.rol?.nombre || "Coleccionista",
+            miembroDesde: "2025",
+            avatar: datosRemotos.foto_perfil || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwI-SIdNOEHGxNnr0zNVPf7TD4TaBAxahdSA&s"
+          });
+        }
+
+      } catch (err) {
+        console.error("Error al cargar el perfil público:", err);
+        setError("No se pudo cargar la información del perfil del usuario.");
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchImages();
-  }, []);
+
+    cargarDatosPerfil();
+  }, [usuarioId, loggedInUser]);
+
+  if (loading) return <div className={styles.container}>Cargando perfil del usuario...</div>;
+  if (error || !usuario) return <div className={styles.container}>⚠️ {error || "Usuario no encontrado"}</div>;
 
   return (
     <div className={styles.container}>
@@ -87,40 +124,44 @@ const PerfilPublico = () => {
       <div className={styles.profileHeader}>
         <div className={styles.banner}>
           <div className={styles.avatarWrapper}>
-            <img src={usuarioPerfil.avatar} alt={usuarioPerfil.nombre} className={styles.avatarImage} />
+            <img src={usuario.avatar} alt={usuario.nombre} className={styles.avatarImage} />
           </div>
         </div>
         <div className={styles.userInfo}>
           <div>
-            <h1>{usuarioPerfil.nombre}</h1>
+            <h1>{usuario.nombre}</h1>
             <div className={styles.userMeta}>
-              <span className={styles.metaItem}>🛡️ {usuarioPerfil.rol}</span>
-              <span className={styles.metaItem}>📍 {usuarioPerfil.ubicacion}</span>
-              <span className={styles.metaItem}>📅 Miembro desde {usuarioPerfil.miembroDesde}</span>
+              <span className={styles.metaItem}>🛡️ {usuario.rol}</span>
+              <span className={styles.metaItem}>📅 Miembro desde {usuario.miembroDesde}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ================= SECCIÓN 1: EN VENTA (MARKETPLACE) ================= */}
+      {/* ================= SECCIÓN 1: EN VENTA ================= */}
       <div className={styles.sectionContainer}>
         <h2 className={styles.sectionTitle}>🛒 Artículos en Venta</h2>
         
-        {mockVentasUsuario.length > 0 ? (
+        {ventas.length > 0 ? (
           <div className={styles.grid}>
-            {mockVentasUsuario.map((pub) => (
-              <div key={pub.ID} className={styles.card}>
+            {ventas.map((pub) => (
+              <div key={pub.id} className={styles.card}>
                 <div className={styles.imageWrapper}>
-                  <img src={pub.FotoURL} alt={pub.Coleccion.nombre_carta} className={styles.cardImage} />
+                  <img 
+                    src={pub.foto_url || pub.coleccion?.carta_imagen} 
+                    alt={pub.coleccion?.carta_nombre} 
+                    className={styles.cardImage} 
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-image.png' }}
+                  />
                 </div>
                 <div className={styles.cardInfo}>
-                  <h3 className={styles.cardTitle}>{pub.Coleccion.nombre_carta}</h3>
+                  <h3 className={styles.cardTitle}>{pub.coleccion?.carta_nombre}</h3>
                   <div className={styles.cardMeta}>
-                    {pub.Coleccion.juego === 'magic' ? 'Magic' : 'Pokémon'}
+                    {pub.coleccion?.carta_juego === 'magic' ? 'Magic: The Gathering' : 'Pokémon TCG'}
                     <br />
-                    <span className={styles.badge}>Estado: {pub.EstadoCarta}</span>
+                    <span className={styles.badge}>Estado: {pub.estado_carta}</span>
                   </div>
-                  <div className={styles.priceTag}>${pub.Precio.toFixed(2)}</div>
+                  <div className={styles.priceTag}>${pub.precio.toFixed(2)}</div>
                   <button className={styles.buyBtn}>Comprar</button>
                 </div>
               </div>
@@ -133,23 +174,24 @@ const PerfilPublico = () => {
 
       {/* ================= SECCIÓN 2: COLECCIÓN PERSONAL ================= */}
       <div className={styles.sectionContainer}>
-        <h2 className={styles.sectionTitle}>🎴 Colección de {usuarioPerfil.nombre}</h2>
+        <h2 className={styles.sectionTitle}>🎴 Colección de {usuario.nombre}</h2>
         
         {coleccion.length > 0 ? (
           <div className={styles.grid}>
             {coleccion.map((item) => (
               <div key={item.id} className={styles.card}>
                 <div className={styles.imageWrapper}>
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.carta.nombre} className={styles.cardImage} />
-                  ) : (
-                    <span>Cargando...</span>
-                  )}
+                  <img 
+                    src={item.carta?.url_imagen} 
+                    alt={item.carta?.nombre} 
+                    className={styles.cardImage} 
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-image.png' }}
+                  />
                 </div>
                 <div className={styles.cardInfo}>
-                  <h3 className={styles.cardTitle}>{item.carta.nombre}</h3>
+                  <h3 className={styles.cardTitle}>{item.carta?.nombre}</h3>
                   <div className={styles.cardMeta}>
-                    {item.carta.juego === 'magic' ? 'Magic' : 'Pokémon'}
+                    {item.carta?.juego === 'magic' ? 'Magic: The Gathering' : 'Pokémon TCG'}
                     <br />
                     <span className={styles.badge}>Cantidad: {item.cantidad}</span>
                     {item.es_foil && <span className={styles.badge} style={{marginLeft: '5px', color: '#F59E0B'}}>Foil</span>}
@@ -159,7 +201,7 @@ const PerfilPublico = () => {
             ))}
           </div>
         ) : (
-          <div className={styles.emptyState}>La colección de este usuario es privada o está vacía.</div>
+          <div className={styles.emptyState}>La colección de este usuario está vacía o es privada.</div>
         )}
       </div>
 

@@ -11,6 +11,7 @@ const Sidebar: React.FC = () => {
   // Función auxiliar para saber si el link está activo
   const isActive = (path: string) => location.pathname === path;
 
+  // Extraemos el objeto user desde el contexto global de autenticación
   const { user } = useAuth();
 
   return (
@@ -51,10 +52,15 @@ const Sidebar: React.FC = () => {
 
       <hr className={styles.divider} />
 
-      {/* Perfil de Usuario (Dropdown falso por ahora) */}
-      <Link to="/Perfil" className={styles.userProfile} style={{ textDecoration: 'none' }}>
+      {/* ================= PERFIL DE USUARIO DINÁMICO ================= */}
+      {/* Apuntamos a la ruta pública pasando el ID del usuario en sesión */}
+      <Link 
+        to={user?.id ? `/perfil/${user.id}` : '/Login'} 
+        className={styles.userProfile} 
+        style={{ textDecoration: 'none' }}
+      >
         <img
-          src={user?.foto_perfil || "https://i.pravatar.cc/150"}
+          src={user?.foto_perfil || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwI-SIdNOEHGxNnr0zNVPf7TD4TaBAxahdSA&s"}
           alt="Perfil"
           className={styles.avatar}
         />
@@ -65,7 +71,7 @@ const Sidebar: React.FC = () => {
           </strong>
 
           <span className={styles.userRole}>
-            {user?.rol || "Sin rol"}
+            {user?.rol || "Coleccionista"}
           </span>
         </div>
       </Link>

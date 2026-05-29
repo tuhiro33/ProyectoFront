@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../assets/styles/Marketplace.module.css';
-import { obtenerPublicaciones } from '../../services/ventasService';
 import type { PublicacionVenta } from '../../services/ventasService';
+import { useAuth } from "../../context/AuthContext";
+import { obtenerPublicaciones, marcarComoVendida, eliminarPublicacion } from '../../services/ventasService';
+import { useAsync } from '../../services/useAsync';
 
 const MarketplacePage = () => {
+  const { user } = useAuth();
   const [publicaciones, setPublicaciones] = useState<PublicacionVenta[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,6 +14,7 @@ const MarketplacePage = () => {
   const [estadoFiltro, setEstadoFiltro] = useState('all');
   const [selectedPub, setSelectedPub] = useState<PublicacionVenta | null>(null);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const { isLoading, run } = useAsync();
 
   useEffect(() => {
     const cargar = async () => {
@@ -44,6 +48,26 @@ const MarketplacePage = () => {
     if (!selectedPub) return;
     alert(`Compra de "${selectedPub.coleccion.carta_nombre}" por $${selectedPub.precio.toFixed(2)} confirmada.\n(Aquí se conectará el flujo de pago)`);
     handleCloseModal();
+  };
+
+  const handleMarcarVendida = (pub: PublicacionVenta) => {
+    run(async () => {
+      if (!window.confirm(`¿Marcar "${pub.coleccion.carta_nombre}" como vendida?`)) return;
+      await marcarComoVendida(pub.id);
+      setPublicaciones(prev => prev.filter(p => p.id !== pub.id));
+      handleCloseModal();
+      alert("Carta marcada como vendida y colección actualizada.");
+    });
+  };
+
+  const handleEliminarPublicacion = (pub: PublicacionVenta) => {
+    run(async () => {
+      if (!window.confirm(`¿Eliminar la publicación de "${pub.coleccion.carta_nombre}"?`)) return;
+      await eliminarPublicacion(pub.id);
+      setPublicaciones(prev => prev.filter(p => p.id !== pub.id));
+      handleCloseModal();
+      alert("Publicación eliminada.");
+    });
   };
 
   if (loading) return <div>Cargando mercado...</div>;
@@ -153,9 +177,31 @@ const MarketplacePage = () => {
                 <div className={styles.sellerInfo}>
                   Vendedor: <span className={styles.sellerName}>{pub.vendedor.nombre}</span>
                 </div>
-                <button className={styles.buyBtn} onClick={() => handleOpenBuyModal(pub)}>
-                  Comprar
-                </button>
+
+                {user && pub.vendedor.id === Number(user.id) ? (
+                  // Es el dueño — mostrar controles de gestión
+                  <div className={styles.ownerActions}>
+                    <button
+                      className={styles.soldBtn}
+                      onClick={() => handleMarcarVendida(pub)}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Procesando...' : '✅ Vendida'}
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleEliminarPublicacion(pub)}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? '...' : '🗑️'}
+                    </button>
+                  </div>
+                ) : (
+                  // Es otro usuario — mostrar botón de compra normal
+                  <button className={styles.buyBtn} onClick={() => handleOpenBuyModal(pub)}>
+                    Comprar
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -195,8 +241,26 @@ const MarketplacePage = () => {
                 </div>
                 <div className={styles.priceHuge}>${selectedPub.precio.toFixed(2)}</div>
                 <div className={styles.modalActions}>
-                  <button className={styles.cancelBtn} onClick={handleCloseModal}>Cancelar</button>
-                  <button className={styles.confirmBuyBtn} onClick={handleConfirmPurchase}>Confirmar Compra</button>
+                  <div className={styles.modalActions}>
+                    <button className={styles.cancelBtn} onClick={handleCloseModal}>Cancelar</button>
+
+                    {user && selectedPub.vendedor.id === Number(user.id) ? (
+                      // Dueño ve sus opciones de gestión
+                      <>
+                        <button className={styles.soldBtn} onClick={() => handleMarcarVendida(selectedPub)}>
+                          ✅ Marcar como Vendida
+                        </button>
+                        <button className={styles.deletePubBtn} onClick={() => handleEliminarPublicacion(selectedPub)}>
+                          🗑️ Eliminar Publicación
+                        </button>
+                      </>
+                    ) : (
+                      // Comprador ve el botón de compra
+                      <button className={styles.confirmBuyBtn} onClick={handleConfirmPurchase}>
+                        Confirmar Compra
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -4,18 +4,18 @@ import { Link, useLocation } from 'react-router-dom';
 import { obtenerColeccion, eliminarCartaDeColeccion } from '../../services/cardService';
 import type { ColeccionItem } from '../../services/cardService';
 import { useAuth } from "../../context/AuthContext";
-import { crearPublicacion } from '../../services/ventasService';
 import type { CrearPublicacionPayload } from '../../services/ventasService';
-
-
+import { crearPublicacion, contarPublicacionesActivas } from '../../services/ventasService';
+import { useAsync } from '../../services/useAsync';
 
 const ColeccionPage = () => {
   const [coleccion, setColeccion] = useState<ColeccionItem[]>([]);
   const [selectedCard, setSelectedCard] = useState<ColeccionItem | null>(null);
-  // Estado inicial vacío para cargar desde el backend
+  const [publicacionesUsadas, setPublicacionesUsadas] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const { user } = useAuth();
+  const { isLoading, run } = useAsync();
 
   const [saleForm, setSaleForm] = useState({
     precio: '',
@@ -23,12 +23,9 @@ const ColeccionPage = () => {
     imagen: null as File | null
   });
 
-  // 2. EFECTO PARA CARGAR DATOS REALES
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-
-        // VALIDACIÓN: Si no hay datos, detenemos la ejecución
         if (!user || !user.id) {
           console.warn("No se encontró usuario iniciado.");
           setLoading(false);
@@ -37,8 +34,6 @@ const ColeccionPage = () => {
 
         const data = await obtenerColeccion(Number(user.id));
         setColeccion(data);
-
-
       } catch (error) {
         console.error("Error al cargar colección:", error);
       } finally {
@@ -49,9 +44,15 @@ const ColeccionPage = () => {
     cargarDatos();
   }, [user]);
 
-  const handleOpenSaleModal = (item: any) => {
+  const handleOpenSaleModal = async (item: ColeccionItem) => {
     setSelectedCard(item);
     setShowModal(true);
+    try {
+      const usadas = await contarPublicacionesActivas(item.id);
+      setPublicacionesUsadas(usadas);
+    } catch {
+      setPublicacionesUsadas(0);
+    }
   };
 
   const handleCloseModal = () => {
@@ -60,65 +61,50 @@ const ColeccionPage = () => {
     setSaleForm({ precio: '', estado: 'NM', imagen: null });
   };
 
-  const handleVenderSubmit = async (e: React.FormEvent) => {
+  const handleVenderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCard) return;
-
-    try {
-      let fotoURL = selectedCard.carta.url_imagen; // fallback: imagen de la carta
-
-      // 1. Si el usuario subió una foto real, la subimos primero a Firebase
+    run(async () => {
+      if (!selectedCard) return;
+      let fotoURL = selectedCard.carta.url_imagen;
       if (saleForm.imagen) {
         const token = localStorage.getItem("token");
         const uploadData = new FormData();
         uploadData.append("image", saleForm.imagen);
-
         const uploadRes = await fetch("http://localhost:8080/upload", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: uploadData,
         });
-
         if (!uploadRes.ok) throw new Error("Error al subir la imagen");
-
         const uploadJson = await uploadRes.json();
-        fotoURL = uploadJson.url; // ← URL de Firebase
+        fotoURL = uploadJson.url;
       }
-
-      // 2. Crear la publicación con la URL obtenida
       const payload: CrearPublicacionPayload = {
         coleccion_id: selectedCard.id,
         precio: Number(saleForm.precio),
         estado_carta: saleForm.estado,
         foto_url: fotoURL,
       };
-
       await crearPublicacion(payload);
       alert(`¡"${selectedCard.carta.nombre}" publicada en el mercado!`);
       handleCloseModal();
-
-    } catch (error) {
-      console.error("Error al publicar:", error);
-      alert("No se pudo publicar la carta");
-    }
+    });
   };
 
-
-  // 3. ELIMINACIÓN REAL MEDIANTE SERVICIO
-  const handleEliminarCarta = async (id: number, nombre: string) => {
-    if (window.confirm(`¿Eliminar ${nombre} de tu colección?`)) {
-      try {
-        // Asumiendo que añadiste esta función al cardService
-        await eliminarCartaDeColeccion(id);
-        setColeccion(prev => prev.filter(i => i.id !== id));
-      } catch (error) {
-        alert("No se pudo eliminar la carta");
-      }
-    }
+  const handleEliminarCarta = (id: number, ExtretNombre: string) => {
+    run(async () => {
+      if (!window.confirm(`¿Eliminar ${ExtretNombre} de tu colección?`)) return;
+      await eliminarCartaDeColeccion(id);
+      setColeccion(prev => prev.filter(i => i.id !== id));
+    });
   };
 
   if (loading) return <div className={styles.loadingFull}>Cargando tu colección...</div>;
 
+  // =================================================================
+  // FILTRADO CLAVE: Filtrar las cartas para mostrar solo las que tengan cantidad > 0
+  // =================================================================
+  const coleccionVisible = coleccion.filter(item => item.cantidad > 0);
 
   return (
     <div className={styles.coleccionContainer}>
@@ -135,10 +121,11 @@ const ColeccionPage = () => {
       </div>
 
       <div className={styles.grid}>
-        {coleccion.length === 0 ? (
-          <p>No tienes cartas en tu colección todavía.</p>
+        {/* Usamos coleccionVisible en lugar del array original */}
+        {coleccionVisible.length === 0 ? (
+          <p>No tienes cartas disponibles en tu colección todavía.</p>
         ) : (
-          coleccion.map((item) => (
+          coleccionVisible.map((item) => (
             <div key={item.id} className={`${styles.card} ${item.es_foil ? styles.isFoil : ''}`}>
               <div className={styles.badgeContainer}>
                 <span className={styles.qtyBadge}>x{item.cantidad}</span>
@@ -146,7 +133,6 @@ const ColeccionPage = () => {
               </div>
 
               <div className={styles.imageContainer}>
-                {/* 4. USAMOS LA URL QUE YA VIENE DEL BACKEND */}
                 <img
                   src={item.carta.url_imagen}
                   alt={item.carta.nombre}
@@ -162,11 +148,19 @@ const ColeccionPage = () => {
                 </span>
 
                 <div className={styles.cardActions}>
-                  <button className={styles.actionBtn} onClick={() => handleOpenSaleModal(item)}>
-                    Al Mercado
+                  <button
+                    className={styles.actionBtn}
+                    onClick={() => handleOpenSaleModal(item)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Cargando...' : 'Al Mercado'}
                   </button>
-                  <button className={styles.deleteBtn} onClick={() => handleEliminarCarta(item.id, item.carta.nombre)}>
-                    🗑️
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={() => handleEliminarCarta(item.id, item.carta.nombre)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? '...' : '🗑️'}
                   </button>
                 </div>
               </div>
@@ -182,6 +176,22 @@ const ColeccionPage = () => {
             <h2>Publicar para Venta</h2>
             <strong className={styles.cardNameHighlight}>{selectedCard.carta.nombre}</strong>
 
+            <div className={styles.stockIndicator}>
+              <span>Publicaciones activas:</span>
+              <span className={
+                publicacionesUsadas >= selectedCard.cantidad
+                  ? styles.stockAgotado
+                  : styles.stockDisponible
+              }>
+                {publicacionesUsadas} / {selectedCard.cantidad}
+              </span>
+            </div>
+
+            {publicacionesUsadas >= selectedCard.cantidad && (
+              <p className={styles.stockWarning}>
+                Ya tienes todas tus copias publicadas en el mercado.
+              </p>
+            )}
             <form className={styles.saleForm} onSubmit={handleVenderSubmit}>
               <div className={styles.formGroup}>
                 <label>Estado de la Carta</label>
@@ -223,8 +233,12 @@ const ColeccionPage = () => {
                 <button type="button" className={styles.cancelBtn} onClick={handleCloseModal}>
                   Cancelar
                 </button>
-                <button type="submit" className={styles.confirmBtn}>
-                  Publicar ahora
+                <button
+                  type="submit"
+                  className={styles.confirmBtn}
+                  disabled={isLoading || publicacionesUsadas >= (selectedCard?.cantidad ?? 0)}
+                >
+                  {isLoading ? 'Publicando...' : 'Publicar ahora'}
                 </button>
               </div>
             </form>
