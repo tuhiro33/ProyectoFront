@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../assets/styles/Coleccion.module.css';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { obtenerColeccion, eliminarCartaDeColeccion } from '../../services/cardService';
 import type { ColeccionItem } from '../../services/cardService';
 import { useAuth } from "../../context/AuthContext";
 import type { CrearPublicacionPayload } from '../../services/ventasService';
 import { crearPublicacion, contarPublicacionesActivas } from '../../services/ventasService';
 import { useAsync } from '../../services/useAsync';
+import apiClient from '../../api/apiClient'; // 1. Importamos tu apiClient
 
 const ColeccionPage = () => {
   const [coleccion, setColeccion] = useState<ColeccionItem[]>([]);
@@ -66,19 +67,23 @@ const ColeccionPage = () => {
     run(async () => {
       if (!selectedCard) return;
       let fotoURL = selectedCard.carta.url_imagen;
+
       if (saleForm.imagen) {
-        const token = localStorage.getItem("token");
         const uploadData = new FormData();
-        uploadData.append("image", saleForm.imagen);
-        const uploadRes = await fetch("http://localhost:8080/upload", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: uploadData,
+        uploadData.append("image", saleForm.imagen); // Mantiene "image" tal cual lo busca Go
+
+        // ================= CÓDIGO CORREGIDO =================
+        // Forzamos a Axios a ignorar el JSON global para este POST específico
+        const uploadRes = await apiClient.post("/upload", uploadData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         });
-        if (!uploadRes.ok) throw new Error("Error al subir la imagen");
-        const uploadJson = await uploadRes.json();
-        fotoURL = uploadJson.url;
+        
+        fotoURL = uploadRes.data.url;
+        // =================================================================
       }
+
       const payload: CrearPublicacionPayload = {
         coleccion_id: selectedCard.id,
         precio: Number(saleForm.precio),
@@ -101,9 +106,6 @@ const ColeccionPage = () => {
 
   if (loading) return <div className={styles.loadingFull}>Cargando tu colección...</div>;
 
-  // =================================================================
-  // FILTRADO CLAVE: Filtrar las cartas para mostrar solo las que tengan cantidad > 0
-  // =================================================================
   const coleccionVisible = coleccion.filter(item => item.cantidad > 0);
 
   return (
@@ -113,15 +115,12 @@ const ColeccionPage = () => {
           <h1>Mi Colección</h1>
           <p>Gestiona las cartas que posees en físico.</p>
         </div>
-        <button className="btn-primary is-neutral">
-          <Link to="/AgregarC" className="btn-primary is-neutral" style={{ textDecoration: 'none' }}>
-            Añadir Nueva Carta
-          </Link>
-        </button>
+        <Link to="/AgregarC" className={styles.addCardBtn}>
+          Añadir Nueva Carta
+        </Link>
       </div>
 
       <div className={styles.grid}>
-        {/* Usamos coleccionVisible en lugar del array original */}
         {coleccionVisible.length === 0 ? (
           <p>No tienes cartas disponibles en tu colección todavía.</p>
         ) : (

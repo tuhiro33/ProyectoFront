@@ -5,9 +5,8 @@ import logoApp from '../../assets/images/Logo.png';
 import { useAuth } from "../../context/AuthContext";
 import { obtenerPublicaciones } from '../../services/ventasService';
 import type { PublicacionVenta } from '../../services/ventasService';
-import apiClient from '../../api/apiClient'; // Ajusta la cantidad de "../" según la ubicación de tu carpeta api
+import apiClient from '../../api/apiClient';
 
-// Interfaz para estructurar los usuarios únicos que encontramos
 interface SugerenciaUsuario {
   id: number;
   nombre: string;
@@ -20,7 +19,6 @@ const HomePage = () => {
   const [publicaciones, setPublicaciones] = useState<PublicacionVenta[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Estados para la barra de búsqueda global
   const [searchUser, setSearchUser] = useState('');
   const [usuariosUnicos, setUsuariosUnicos] = useState<SugerenciaUsuario[]>([]);
   const [sugerenciasFiltradas, setSugerenciasFiltradas] = useState<SugerenciaUsuario[]>([]);
@@ -29,16 +27,13 @@ const HomePage = () => {
   useEffect(() => {
     const cargarComponentesHome = async () => {
       try {
-        // Ejecutamos ambas consultas en paralelo para máxima velocidad
+        // NOTA: Asegúrate de aplicar la corrección en ventasService.ts para que obtenerPublicaciones() use apiClient
         const [resPublicaciones, resUsuarios] = await Promise.all([
           obtenerPublicaciones(),
-          apiClient.get('/usuarios/coleccionistas') // 👈 Tu nuevo endpoint global
+          apiClient.get('/usuarios/coleccionistas')
         ]);
 
-        // 1. Cargamos las publicaciones del feed
         setPublicaciones(resPublicaciones.slice(0, 6));
-
-        // 2. Cargamos TODOS los usuarios que tienen colecciones activas directamente del back
         const listaUsuarios: SugerenciaUsuario[] = Array.isArray(resUsuarios.data) ? resUsuarios.data : [];
         setUsuariosUnicos(listaUsuarios);
 
@@ -52,7 +47,6 @@ const HomePage = () => {
     cargarComponentesHome();
   }, []);
 
-  // ================= LOS MANEJACORES DE FILTRADO SE QUEDAN IGUAL =================
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value;
     setSearchUser(valor);
@@ -63,7 +57,6 @@ const HomePage = () => {
       return;
     }
 
-    // El filtro ahora buscará sobre CUALQUIER usuario con colección en la app, no solo los 6 del feed
     const filtrados = usuariosUnicos.filter(usuario =>
       usuario.nombre.toLowerCase().includes(valor.toLowerCase())
     );
@@ -85,74 +78,39 @@ const HomePage = () => {
     }
   };
 
-  if (loading) return <div>Cargando el santuario...</div>;
+  if (loading) return <div className={styles.loadingFull}>Cargando el santuario...</div>;
+
   return (
     <div className={styles.homeContainer}>
 
       <header className={styles.header}>
         <div className={styles.logoGroup}>
-          <div className={styles.logoIcon}>
-            <img src={logoApp} alt="Logo" className={styles.logoIcon} />
-          </div>
-          <span className={styles.logoText}>*nombre de la aplicacion que se me ocurrio en el momento*</span>
+          <img src={logoApp} alt="Logo" className={styles.logoIcon} />
+          <span className={styles.logoText}>TCG Vault</span>
         </div>
 
-        {/* ================= CONTENEDOR DE LA BARRA CON AUTOCOMPLETADO ================= */}
-        <div style={{ position: 'relative', flex: 1, maxWidth: '400px', margin: '0 2rem' }}>
+        {/* ================= BARRA CON AUTOCOMPLETADO ================= */}
+        <div className={styles.searchWrapper}>
           <form onSubmit={handleSearchUserSubmit}>
             <input
               type="text"
+              className={styles.searchBar}
               placeholder="🔍 Buscar coleccionista..."
               value={searchUser}
               onChange={handleInputChange}
               onFocus={() => searchUser.trim() !== '' && setShowDropdown(true)}
-              // Retraso para permitir el clic antes de ocultar el menú
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)} 
-              style={{
-                width: '100%',
-                padding: '0.6rem 1rem',
-                borderRadius: '8px',
-                border: '1px solid #3f3f46',
-                backgroundColor: '#18181b',
-                color: '#ededed',
-                fontSize: '0.9rem',
-                outline: 'none'
-              }}
             />
           </form>
 
           {/* MENÚ DESPLEGABLE DE SUGERENCIAS */}
           {showDropdown && sugerenciasFiltradas.length > 0 && (
-            <ul style={{
-              position: 'absolute',
-              top: '110%',
-              left: 0,
-              width: '100%',
-              backgroundColor: '#1f1f23',
-              border: '1px solid #3f3f46',
-              borderRadius: '8px',
-              listStyle: 'none',
-              padding: '0.5rem 0',
-              margin: 0,
-              zIndex: 1000,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-              maxHeight: '200px',
-              overflowY: 'auto'
-            }}>
+            <ul className={styles.dropdownList}>
               {sugerenciasFiltradas.map((usuario) => (
                 <li
                   key={usuario.id}
                   onClick={() => handleSelectUsuario(usuario.id)}
-                  style={{
-                    padding: '0.6rem 1rem',
-                    color: '#ededed',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    transition: 'background-color 0.2s'
-                  }}
-                  // Efecto hover simple en línea
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#27272a')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  className={styles.dropdownItem}
                 >
                   👤 {usuario.nombre}
                 </li>
@@ -176,7 +134,8 @@ const HomePage = () => {
             <button
               onClick={() => {
                 logout();
-                window.location.href = "/";
+                // CORRECCIÓN: Usamos navigate para limpiar el estado sin tumbar la subruta de GitHub Pages
+                navigate("/login"); 
               }}
               className="btn-secondary"
             >
@@ -186,7 +145,6 @@ const HomePage = () => {
         </div>
       </header>
 
-      {/* ... El resto de tus secciones (Hero, Mercado y Footer) se quedan exactamente igual ... */}
       <section className={styles.hero}>
         <h1 className={styles.title}>El santuario definitivo para tus colecciones</h1>
         <p className={styles.subtitle}>Gestiona, organiza y presume tus cartones brillosos en un solo lugar.</p>
@@ -206,7 +164,7 @@ const HomePage = () => {
         <div className={styles.grid}>
           {publicaciones.map((pub) => (
             <div key={pub.id} className={styles.card}>
-              <div className={styles.cardImage}>
+              <div className={styles.cardImageWrapper}>
                 <img
                   src={pub.foto_url || pub.coleccion.carta_imagen}
                   alt={pub.coleccion.carta_nombre}
@@ -234,7 +192,7 @@ const HomePage = () => {
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
           <div className={styles.footerBrand}>
-            <h3>La Pagina sin un nombre</h3>
+            <h3>TCG Vault</h3>
             <p>Construido por y para coleccionistas.</p>
           </div>
           <div className={styles.footerLinksGrid}>
@@ -258,7 +216,7 @@ const HomePage = () => {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>&copy; {new Date().getFullYear()} *nombre de la aplicacion que se me ocurrio en el momento*. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} TCG Vault. Todos los derechos reservados.</p>
         </div>
       </footer>
 

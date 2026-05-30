@@ -1,10 +1,15 @@
-/* =========================================
-   CONTENEDOR BASE
-   ========================================= */
+/* src/pages/Home/home.module.css */
+
 .homeContainer {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-main, #121212);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* =========================================
@@ -32,8 +37,7 @@
 .logoIcon {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #A855F7 0%, #D946EF 100%);
-  border-radius: 8px;
+  object-fit: contain;
 }
 
 .logoText {
@@ -43,17 +47,73 @@
   letter-spacing: -0.5px;
 }
 
+/* =========================================
+   BARRA DE BÚSQUEDA GLOBAL GLOBAL (Migrado de inline)
+   ========================================= */
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+  margin: 0 2rem;
+}
+
+.searchBar {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, #3F3F46);
+  background-color: #18181b;
+  color: #ededed;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition-speed) ease;
+}
+
+.searchBar:focus {
+  border-color: #A855F7;
+}
+
+.dropdownList {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background-color: #1f1f23;
+  border: 1px solid var(--border-color, #3F3F46);
+  border-radius: var(--radius-md, 8px);
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdownItem {
+  padding: 0.6rem 1rem;
+  color: #ededed;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color var(--transition-speed) ease;
+}
+
+.dropdownItem:hover {
+  background-color: var(--bg-surface-hover, #27272a);
+}
+
+/* Enlaces navegación */
 .navLinks {
   display: none;
   gap: 2rem;
 }
 
 .navLinks a {
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
-  transition: color 0.2s ease;
+  transition: color var(--transition-speed) ease;
 }
 
 .navLinks a:hover {
@@ -63,6 +123,7 @@
 .headerActions {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 @media (min-width: 768px) {
@@ -82,7 +143,7 @@
   align-items: center;
   text-align: center;
   padding: 6rem 5%;
-  background: radial-gradient(circle at center, #1E1E24 0%, #121212 100%);
+  background: radial-gradient(circle at center, var(--bg-surface, #1E1E24) 0%, var(--bg-main, #121212) 100%);
 }
 
 .title {
@@ -99,7 +160,7 @@
 
 .subtitle {
   font-size: 1.2rem;
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   max-width: 600px;
   margin-bottom: 3rem;
   line-height: 1.6;
@@ -133,7 +194,7 @@
 }
 
 .albumHeader p {
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   font-size: 1.1rem;
 }
 
@@ -148,9 +209,11 @@
 .card {
   background-color: var(--bg-surface, #1E1E24);
   border: 1px solid var(--border-color, #3F3F46);
-  border-radius: 12px;
+  border-radius: var(--radius-lg, 12px);
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
@@ -158,30 +221,40 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
-.cardImage {
-  height: 200px;
+.cardImageWrapper {
+  height: 250px;
   width: 100%;
+  background-color: #121212;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
-  font-weight: bold;
-  color: rgba(255, 255, 255, 0.3);
 }
 
-.bgMagic { background: linear-gradient(135deg, #1E1E24 0%, #312E81 100%); }
-.bgPokemon { background: linear-gradient(135deg, #1E1E24 0%, #7F1D1D 100%); }
+.realImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.5rem;
+}
 
-.cardBody { padding: 1.5rem; }
+.cardBody { 
+  padding: 1.5rem; 
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
 .cardBody h3 {
   font-size: 1.25rem;
   margin-bottom: 0.25rem;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardText {
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   font-size: 0.9rem;
   margin-bottom: 1.5rem;
 }
@@ -200,13 +273,13 @@
 
 .btnOutline {
   background: transparent;
-  color: #A1A1AA;
-  border: 1px solid #3F3F46;
+  color: var(--text-secondary, #A1A1AA);
+  border: 1px solid var(--border-color, #3F3F46);
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-speed) ease;
 }
 
 .btnOutline:hover {
@@ -216,7 +289,8 @@
 
 .textMuted {
   color: #71717A;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: bold;
 }
 
 /* =========================================
@@ -245,7 +319,7 @@
 }
 
 .footerBrand p {
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   line-height: 1.6;
   max-width: 300px;
 }
@@ -270,10 +344,10 @@
 }
 
 .linkColumn a {
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   text-decoration: none;
   font-size: 0.9rem;
-  transition: color 0.2s ease;
+  transition: color var(--transition-speed) ease;
 }
 
 .linkColumn a:hover {

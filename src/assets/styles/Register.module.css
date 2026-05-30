@@ -4,6 +4,7 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-main, #121212);
+  flex-direction: column;
 }
 
 /* =========================================
@@ -11,19 +12,19 @@
    ========================================= */
 .brandingSide {
   flex: 1;
-  display: none; /* Se oculta en celulares */
+  display: none; /* Oculto en móviles por defecto */
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 3rem;
-  background: linear-gradient(135deg, #1E1E24 0%, rgba(168, 85, 247, 0.2) 100%);
-  border-right: 1px solid var(--border-color, #3F3F46);
+  background: linear-gradient(135deg, var(--bg-surface, #1E1E24) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border-bottom: 1px solid var(--border-color, #3F3F46);
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
-/* Brillo de fondo para dar aspecto premium */
+/* Brillo de fondo premium */
 .brandingSide::before {
   content: '';
   position: absolute;
@@ -32,7 +33,7 @@
   transform: translate(-50%, -50%);
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -49,7 +50,7 @@
 }
 
 .brandSubtitle {
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   font-size: 1.1rem;
   max-width: 400px;
   line-height: 1.6;
@@ -71,7 +72,7 @@
   max-width: 420px;
   background-color: var(--bg-surface, #1E1E24);
   padding: 2.5rem;
-  border-radius: 16px;
+  border-radius: var(--radius-lg, 12px);
   border: 1px solid var(--border-color, #3F3F46);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
@@ -88,7 +89,7 @@
 }
 
 .formHeader p {
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   font-size: 0.95rem;
 }
 
@@ -100,19 +101,19 @@
 }
 
 .inputGroup label {
-  color: #EDEDED;
+  color: var(--text-primary, #EDEDED);
   font-size: 0.9rem;
   font-weight: 500;
 }
 
 .inputControl {
   padding: 0.85rem 1rem;
-  background-color: #121212;
-  border: 1px solid #3F3F46;
-  border-radius: 8px;
+  background-color: var(--bg-main, #121212);
+  border: 1px solid var(--border-color, #3F3F46);
+  border-radius: var(--radius-md, 8px);
   color: white;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: all var(--transition-speed, 0.2s) ease;
 }
 
 .inputControl:focus {
@@ -127,11 +128,11 @@
   background-color: #A855F7;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md, 8px);
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition-speed, 0.2s) ease;
   margin-top: 1rem;
 }
 
@@ -142,7 +143,7 @@
 .loginPrompt {
   margin-top: 1.5rem;
   text-align: center;
-  color: #A1A1AA;
+  color: var(--text-secondary, #A1A1AA);
   font-size: 0.9rem;
 }
 
@@ -151,7 +152,7 @@
   text-decoration: none;
   font-weight: 600;
   margin-left: 0.5rem;
-  transition: color 0.2s ease;
+  transition: color var(--transition-speed, 0.2s) ease;
 }
 
 .loginLink:hover {
@@ -159,13 +160,20 @@
 }
 
 .errorText {
-  color: #FF5252;
+  color: var(--accent-pokemon, #FF5252);
   font-size: 0.85rem;
   margin-top: 0.25rem;
+  font-weight: 500;
 }
 
+/* Soporte responsivo para pantallas de escritorio */
 @media (min-width: 900px) {
+  .splitLayout {
+    flex-direction: row;
+  }
   .brandingSide {
     display: flex;
+    border-right: 1px solid var(--border-color, #3F3F46);
+    border-bottom: none;
   }
 }

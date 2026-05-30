@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import styles from '../../assets/styles/Perfil.module.css';
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import apiClient from '../../api/apiClient'; // 1. Importamos tu apiClient personalizado
 
 const PerfilPage = () => {
   const { user } = useAuth();
   const usuario = user;
   const navigate = useNavigate();
-  const { logout, token } = useAuth();
+  const { logout } = useAuth(); // Quitamos 'token' de aquí ya que apiClient lo inyecta solo
 
-  // 🔹 Estado del formulario (inicia vacío)
+  // Estado del formulario
   const [formData, setFormData] = useState({
     nombre_usuario: '',
     email: '',
@@ -18,40 +19,8 @@ const PerfilPage = () => {
     confirm_password: ''
   });
 
-  const handleDeleteAccount = async () => {
-  const confirmacion = window.confirm(
-    "⚠️ Esta acción eliminará tu cuenta permanentemente.\n\n¿Estás seguro?"
-  );
-
-  if (!confirmacion) return;
-
-  try {
-    const res = await fetch("http://localhost:8080/usuarios", {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    if (!res.ok) {
-      throw new Error("Error al eliminar cuenta");
-    }
-
-    alert("Cuenta eliminada correctamente");
-
-    logout();           // limpiar sesión
-    navigate("/login"); // redirigir
-
-  } catch (error) {
-    console.error(error);
-    alert("Ocurrió un error al eliminar la cuenta");
-  }
-};
-
-  // 🔹 Preview de imagen
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // 🔹 Cuando llega el usuario desde /me
   useEffect(() => {
     if (usuario) {
       setFormData(prev => ({
@@ -64,8 +33,28 @@ const PerfilPage = () => {
     }
   }, [usuario]);
 
-  // 🔴 Manejo de carga inicial
-  if (!usuario) return <p>Cargando perfil...</p>;
+  const handleDeleteAccount = async () => {
+    const confirmacion = window.confirm(
+      "⚠️ Esta acción eliminará tu cuenta permanentemente.\n\n¿Estás seguro?"
+    );
+
+    if (!confirmacion) return;
+
+    try {
+      // ================= CORRECCIÓN 1: ELIMINAR CUENTA =================
+      await apiClient.delete("/usuarios");
+
+      alert("Cuenta completa e irreversiblemente eliminada.");
+      logout();
+      navigate("/login");
+
+    } catch (error) {
+      console.error(error);
+      alert("Ocurrió un error al eliminar la cuenta");
+    }
+  };
+
+  if (!usuario) return <div className={styles.loadingFull}>Cargando perfil del santuario...</div>;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -75,7 +64,6 @@ const PerfilPage = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-
       setFormData(prev => ({ ...prev, foto_file: file }));
       setPreviewImage(URL.createObjectURL(file));
     }
@@ -85,67 +73,54 @@ const PerfilPage = () => {
     e.preventDefault();
 
     if (formData.new_password !== formData.confirm_password) {
-        alert("Las contraseñas no coinciden.");
-        return;
+      alert("Las contraseñas no coinciden.");
+      return;
     }
 
     try {
-        let fotoPerfil = usuario.foto_perfil;
+      let fotoPerfil = usuario.foto_perfil;
 
-        // 1. Si hay foto nueva, subirla primero a Firebase
-        if (formData.foto_file) {
-            const uploadData = new FormData();
-            uploadData.append("image", formData.foto_file);
+      if (formData.foto_file) {
+        const uploadData = new FormData();
+        uploadData.append("image", formData.foto_file);
 
-            const uploadRes = await fetch("http://localhost:8080/upload", {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-                body: uploadData
-            });
-
-            if (!uploadRes.ok) throw new Error("Error al subir la imagen");
-
-            const uploadJson = await uploadRes.json();
-            fotoPerfil = uploadJson.url; // URL de Firebase
-        }
-
-        // 2. Actualizar datos del usuario
-        const body: Record<string, string> = {
-            nombre_usuario: formData.nombre_usuario,
-            email: formData.email,
-            foto_perfil: fotoPerfil
-        };
-
-        if (formData.new_password) {
-            body.password = formData.new_password;
-        }
-
-        const res = await fetch("http://localhost:8080/usuarios", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(body)
+        // ================= CORRECCIÓN 2: SUBIR IMAGEN DE PERFIL =================
+        // Forzamos el encabezado correcto para saltarnos el JSON por defecto
+        const uploadRes = await apiClient.post("/upload", uploadData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         });
+        fotoPerfil = uploadRes.data.url;
+      }
 
-        if (!res.ok) throw new Error("Error al actualizar el perfil");
+      const body: Record<string, string> = {
+        nombre_usuario: formData.nombre_usuario,
+        email: formData.email,
+        foto_perfil: fotoPerfil
+      };
 
-        alert("¡Perfil actualizado correctamente!");
+      if (formData.new_password) {
+        body.password = formData.new_password;
+      }
 
-        // Limpiar passwords
-        setFormData(prev => ({
-            ...prev,
-            new_password: '',
-            confirm_password: '',
-            foto_file: null
-        }));
+      // ================= CORRECCIÓN 3: ACTUALIZAR DATOS (PUT) =================
+      await apiClient.put("/usuarios", body);
+
+      alert("¡Perfil actualizado correctamente!");
+
+      setFormData(prev => ({
+        ...prev,
+        new_password: '',
+        confirm_password: '',
+        foto_file: null
+      }));
 
     } catch (error) {
-        console.error(error);
-        alert("Ocurrió un error al guardar los cambios");
+      console.error(error);
+      alert("Ocurrió un error al guardar los cambios");
     }
-};
+  };
 
   const fechaFormateada = new Date(usuario.fecha_registro).toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -157,29 +132,18 @@ const PerfilPage = () => {
     <div className={styles.perfilContainer}>
       <div className={styles.profileCard}>
 
-        {/* Avatar */}
+        {/* Encabezado del Perfil */}
         <div className={styles.banner}>
           <div className={styles.avatarContainer}>
-            {/* {previewImage ? (
-              <img src={previewImage} alt="Avatar" className={styles.avatarImage} />
-            ) : (
-              <div className={styles.avatarPlaceholder}>
-                {usuario.nombre_usuario.charAt(0).toUpperCase()}
-              </div>
-            )} */}
             <img
-              src={
-                previewImage ||
-                usuario.foto_perfil ||
-                "https://i.pravatar.cc/150"
-              }
-              alt="Avatar"
+              src={previewImage || usuario.foto_perfil || "https://i.pravatar.cc/150"}
+              alt="Avatar del Coleccionista"
               className={styles.avatarImage}
             />
           </div>
         </div>
 
-        {/* Info */}
+        {/* Datos Base */}
         <div className={styles.headerInfo}>
           <div className={styles.userInfo}>
             <h1>Actualizar Perfil</h1>
@@ -188,7 +152,7 @@ const PerfilPage = () => {
           </div>
         </div>
 
-        {/* Formulario */}
+        {/* Campos Editables */}
         <div className={styles.formSection}>
           <form onSubmit={handleSave}>
 
@@ -227,14 +191,15 @@ const PerfilPage = () => {
             </div>
 
             <div className={styles.inputGroup}>
-              <label>Rol</label>
+              <label>Rol asignado</label>
               <div className={`${styles.inputControl} ${styles.readonlyInput}`}>
-                {usuario.rol === 'admin' ? 'Administrador' : 'Coleccionista'}
+                {usuario.rol === 'admin' ? '🛡️ Administrador' : '🎒 Coleccionista'}
               </div>
             </div>
 
+            {/* Bloque de Contraseña */}
             <div className={styles.securitySection}>
-              <h3>Seguridad</h3>
+              <h3>Security</h3>
 
               <div className={styles.inputGroup}>
                 <label>Nueva Contraseña</label>
@@ -259,19 +224,28 @@ const PerfilPage = () => {
               </div>
             </div>
 
+            {/* Acciones principales */}
             <div className={styles.actionButtons}>
+              <button 
+                type="button" 
+                className={styles.cancelBtn} 
+                onClick={() => navigate("/Home")}
+              >
+                Cancelar
+              </button>
               <button type="submit" className={styles.saveBtn}>
                 Guardar Cambios
               </button>
             </div>
 
+            {/* Zona Peligrosa */}
             <div className={styles.dangerZone}>
               <button
                 type="button"
                 className={styles.deleteBtn}
                 onClick={handleDeleteAccount}
               >
-                Eliminar cuenta
+                🗑️ Eliminar Cuenta Permanentemente
               </button>
             </div>
 

@@ -4,6 +4,7 @@ import type { PublicacionVenta } from '../../services/ventasService';
 import { useAuth } from "../../context/AuthContext";
 import { obtenerPublicaciones, marcarComoVendida, eliminarPublicacion } from '../../services/ventasService';
 import { useAsync } from '../../services/useAsync';
+import { intercambioService } from '../../services/intercambioService';
 
 const MarketplacePage = () => {
   const { user } = useAuth();
@@ -20,8 +21,8 @@ const MarketplacePage = () => {
     const cargar = async () => {
       try {
         const data = await obtenerPublicaciones();
+        // Corregida doble asignación consecutiva
         setPublicaciones(Array.isArray(data) ? data : []);
-        setPublicaciones(data);
       } catch (error) {
         console.error("Error al cargar publicaciones:", error);
       } finally {
@@ -31,7 +32,6 @@ const MarketplacePage = () => {
     cargar();
   }, []);
 
-  // Filtros aplicados
   const publicacionesFiltradas = publicaciones.filter(pub => {
     const coincideNombre = pub.coleccion.carta_nombre
       .toLowerCase()
@@ -46,8 +46,38 @@ const MarketplacePage = () => {
 
   const handleConfirmPurchase = () => {
     if (!selectedPub) return;
-    alert(`Compra de "${selectedPub.coleccion.carta_nombre}" por $${selectedPub.precio.toFixed(2)} confirmada.\n(Aquí se conectará el flujo de pago)`);
-    handleCloseModal();
+
+    // Validamos que exista un usuario logeado para saber quién está comprando
+    if (!user) {
+      alert("Debes iniciar sesión para poder comprar o enviar una oferta.");
+      return;
+    }
+
+    // Usamos el hook run para bloquear segundas pulsaciones accidentales mientras se envía el correo
+    run(async () => {
+      const mensajeConfirmacion = `¿Estás seguro de que quieres enviar una oferta de compra por "${selectedPub.coleccion.carta_nombre}" por $${selectedPub.precio.toFixed(2)}?\n\nSe le enviará un correo de notificación al vendedor para coordinar la entrega.`;
+
+      if (!window.confirm(mensajeConfirmacion)) return;
+
+      // Estructuramos el objeto tal cual como lo espera tu backend en Go
+      const datosNotificacion = {
+        nombreCarta: selectedPub.coleccion.carta_nombre,
+        precio: selectedPub.precio,
+        estadoCarta: selectedPub.estado_carta,
+        nombreDestinatario: selectedPub.vendedor.nombre, // El vendedor que recibe el correo
+        correoComprador: user.email || "" // El correo del usuario logeado que presiona el botón
+      };
+
+      // Llamamos al servicio con Axios
+      const exito = await intercambioService.enviarNotificacion(datosNotificacion);
+
+      if (exito) {
+        alert(`¡Solicitud enviada! Se ha notificado por correo a ${selectedPub.vendedor.nombre}. Revisa tu bandeja de entrada o ponte en contacto.`);
+        handleCloseModal();
+      } else {
+        alert("Hubo un error al procesar la notificación de compra. Por favor, inténtalo de nuevo.");
+      }
+    });
   };
 
   const handleMarcarVendida = (pub: PublicacionVenta) => {
@@ -70,10 +100,11 @@ const MarketplacePage = () => {
     });
   };
 
-  if (loading) return <div>Cargando mercado...</div>;
-  ///////////////////////////////////////////////////////////////////////
+  if (loading) return <div className={styles.loadingFull}>Cargando mercado...</div>;
+
   return (
     <div className={styles.marketplaceContainer}>
+
       {/* ================= MODAL FLOTANTE DE DESCARGO (APARECE PRIMERO) ================= */}
       {showDisclaimer && (
         <div className={styles.modalOverlay}>
@@ -107,7 +138,8 @@ const MarketplacePage = () => {
           </div>
         </div>
       )}
-      {/* HERO BANNER — igual que antes */}
+
+      {/* HERO BANNER */}
       <div className={styles.heroBanner}>
         <div className={styles.heroText}>
           <h1>Mercado Global</h1>
@@ -121,7 +153,7 @@ const MarketplacePage = () => {
         </div>
       </div>
 
-      {/* FILTROS — ahora funcionales */}
+      {/* FILTROS */}
       <div className={styles.filtersContainer}>
         <h3 className={styles.filtersTitle}>Filtros de Búsqueda</h3>
         <div className={styles.filtersBar}>
@@ -151,7 +183,7 @@ const MarketplacePage = () => {
         </div>
       </div>
 
-      {/* GRID — ahora con datos reales y campos correctos */}
+      {/* GRID DE CARTAS MERCADO */}
       <div className={styles.grid}>
         {publicacionesFiltradas.map((pub) => (
           <div key={pub.id} className={styles.card}>
@@ -179,7 +211,6 @@ const MarketplacePage = () => {
                 </div>
 
                 {user && pub.vendedor.id === Number(user.id) ? (
-                  // Es el dueño — mostrar controles de gestión
                   <div className={styles.ownerActions}>
                     <button
                       className={styles.soldBtn}
@@ -197,7 +228,6 @@ const MarketplacePage = () => {
                     </button>
                   </div>
                 ) : (
-                  // Es otro usuario — mostrar botón de compra normal
                   <button className={styles.buyBtn} onClick={() => handleOpenBuyModal(pub)}>
                     Comprar
                   </button>
@@ -208,7 +238,7 @@ const MarketplacePage = () => {
         ))}
       </div>
 
-      {/* MODAL DE COMPRA — campos actualizados */}
+      {/* MODAL DE COMPRA */}
       {selectedPub && (
         <div className={styles.modalOverlay} onClick={handleCloseModal}>
           <div className={styles.buyModalContent} onClick={(e) => e.stopPropagation()}>
@@ -240,27 +270,29 @@ const MarketplacePage = () => {
                   </span>
                 </div>
                 <div className={styles.priceHuge}>${selectedPub.precio.toFixed(2)}</div>
-                <div className={styles.modalActions}>
-                  <div className={styles.modalActions}>
-                    <button className={styles.cancelBtn} onClick={handleCloseModal}>Cancelar</button>
 
-                    {user && selectedPub.vendedor.id === Number(user.id) ? (
-                      // Dueño ve sus opciones de gestión
-                      <>
-                        <button className={styles.soldBtn} onClick={() => handleMarcarVendida(selectedPub)}>
-                          ✅ Marcar como Vendida
-                        </button>
-                        <button className={styles.deletePubBtn} onClick={() => handleEliminarPublicacion(selectedPub)}>
-                          🗑️ Eliminar Publicación
-                        </button>
-                      </>
-                    ) : (
-                      // Comprador ve el botón de compra
-                      <button className={styles.confirmBuyBtn} onClick={handleConfirmPurchase}>
-                        Confirmar Compra
+                {/* Corregida duplicación del wrapper modalActions */}
+                <div className={styles.modalActions}>
+                  <button className={styles.cancelBtn} onClick={handleCloseModal}>Cancelar</button>
+
+                  {user && selectedPub.vendedor.id === Number(user.id) ? (
+                    <>
+                      <button className={styles.soldBtn} onClick={() => handleMarcarVendida(selectedPub)}>
+                        ✅ Marcar como Vendida
                       </button>
-                    )}
-                  </div>
+                      <button className={styles.deletePubBtn} onClick={() => handleEliminarPublicacion(selectedPub)}>
+                        🗑️ Eliminar
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className={styles.confirmBuyBtn}
+                      onClick={handleConfirmPurchase}
+                      disabled={isLoading} // Deshabilita el botón si useAsync está cargando
+                    >
+                      {isLoading ? 'Enviando oferta...' : 'Confirmar Compra'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -4,7 +4,6 @@ import styles from '../../assets/styles/PerfilPublico.module.css';
 import apiClient from '../../api/apiClient'; 
 import { useAuth } from '../../context/AuthContext'; 
 
-// ================= INTERFACES ALINEADAS AL BACKEND =================
 interface UsuarioDTO {
   id: number;
   nombre: string;
@@ -58,7 +57,6 @@ const PerfilPublico = () => {
       setError(null);
       
       try {
-        // 1. Si el ID de la URL coincide con el usuario logueado, usamos sus datos de sesión de inmediato
         if (loggedInUser && Number(loggedInUser.id) === Number(usuarioId)) {
           setUsuario({
             id: Number(loggedInUser.id),
@@ -69,33 +67,27 @@ const PerfilPublico = () => {
           });
         }
 
-        // 2. Ejecutamos las peticiones concurrentes a la base de datos
-        // ¡Añadimos la petición directa del perfil del usuario remoto!
         const [resColeccion, resPublicaciones, resInfoUsuario] = await Promise.all([
           apiClient.get(`/coleccion/${usuarioId}`),
           apiClient.get('/publicaciones'),
-          apiClient.get(`/usuarios/perfil/${usuarioId}`) // 👈 Tu nuevo endpoint global
+          apiClient.get(`/usuarios/perfil/${usuarioId}`)
         ]);
 
-        // Procesar colección filtrando los elementos con cantidad > 0
         const coleccionData: ColeccionItem[] = Array.isArray(resColeccion.data) ? resColeccion.data : [];
         const coleccionValida = coleccionData.filter(item => item.cantidad > 0);
         setColeccion(coleccionValida);
 
-        // Filtrar publicaciones que correspondan al usuario de la URL
         const todasLasPublicaciones: PublicacionVenta[] = Array.isArray(resPublicaciones.data) ? resPublicaciones.data : [];
         const ventasUsuario = todasLasPublicaciones.filter(pub => {
           return (pub as any).vendedor?.id === Number(usuarioId);
         });
         setVentas(ventasUsuario);
 
-        // 3. Si es un usuario externo, mapeamos la respuesta directa del backend
         if (!loggedInUser || Number(loggedInUser.id) !== Number(usuarioId)) {
           const datosRemotos = resInfoUsuario.data;
           
           setUsuario({
             id: Number(usuarioId),
-            // Ajustamos las llaves según los nombres exactos que use tu dto.UsuarioResponse en Go
             nombre: datosRemotos.nombre_usuario || datosRemotos.nombre || `Usuario #${usuarioId}`,
             rol: datosRemotos.rol?.nombre || "Coleccionista",
             miembroDesde: "2025",
@@ -114,8 +106,9 @@ const PerfilPublico = () => {
     cargarDatosPerfil();
   }, [usuarioId, loggedInUser]);
 
-  if (loading) return <div className={styles.container}>Cargando perfil del usuario...</div>;
-  if (error || !usuario) return <div className={styles.container}>⚠️ {error || "Usuario no encontrado"}</div>;
+  // Se asignaron las clases de centrado correspondientes para mejorar la UX de carga y errores
+  if (loading) return <div className={styles.loadingFull}>Cargando perfil del usuario...</div>;
+  if (error || !usuario) return <div className={styles.loadingFull}>⚠️ {error || "Usuario no encontrado"}</div>;
 
   return (
     <div className={styles.container}>
@@ -194,7 +187,8 @@ const PerfilPublico = () => {
                     {item.carta?.juego === 'magic' ? 'Magic: The Gathering' : 'Pokémon TCG'}
                     <br />
                     <span className={styles.badge}>Cantidad: {item.cantidad}</span>
-                    {item.es_foil && <span className={styles.badge} style={{marginLeft: '5px', color: '#F59E0B'}}>Foil</span>}
+                    {/* Se removieron los estilos en línea por una clase dedicada de CSS modules */}
+                    {item.es_foil && <span className={styles.foilBadge}>Foil</span>}
                   </div>
                 </div>
               </div>

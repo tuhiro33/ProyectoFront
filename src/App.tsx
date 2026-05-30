@@ -1,5 +1,48 @@
+// import React from 'react';
+// import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// import LoginPage from './pages/Auth/Login';
+// import HomePage from './pages/Home/Home';
+// import MarketplacePage from './pages/Marketplace/Marketplace';
+// import RegisterPage from './pages/Auth/Register';
+// import ColeccionPage from './pages/Coleccion/Coleccion';
+// import AgregarCPage from './pages/Coleccion/AgregarCarta';
+// import PerfilPage from './pages/Perfil/Perfil';
+// import AppLayout from './componentes/layout/AppLayout';
+// import PerfilPublico from './pages/Perfil/PerfilPublico';
+
+// function App() {
+//   return (
+    
+//     <BrowserRouter basename="/ProyectoFront">
+//       <Routes>
+        
+
+//         <Route path="/" element={<Navigate to="/Home" replace />} />
+//         <Route path="/Home" element={<HomePage />} />
+//         <Route path="/login" element={<LoginPage />} />
+//         <Route path="/registro" element={<RegisterPage />} />
+
+//         <Route element={<AppLayout />}>
+          
+//           <Route path="/mercado" element={<MarketplacePage />} />
+//           <Route path="/coleccion" element={<ColeccionPage />} />
+//           <Route path="/AgregarC" element={<AgregarCPage />} /> 
+//           <Route path="/Perfil" element={<PerfilPage />} />  
+//           <Route path="/perfil/:usuarioId" element={<PerfilPublico />} /> 
+                    
+//         </Route>
+//         <Route path="*" element={<h1 style={{ color: 'white', textAlign: 'center', marginTop: '2rem' }}>404 - Carta no encontrada</h1>} />
+
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
+
+// export default App;
+
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'; // 1. Cambiamos a HashRouter
 
 import LoginPage from './pages/Auth/Login';
 import HomePage from './pages/Home/Home';
@@ -13,28 +56,29 @@ import PerfilPublico from './pages/Perfil/PerfilPublico';
 
 function App() {
   return (
-    <BrowserRouter>
+    // 2. Envolvemos todo en HashRouter limpio
+    <HashRouter>
       <Routes>
         
-
         <Route path="/" element={<Navigate to="/Home" replace />} />
         <Route path="/Home" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/registro" element={<RegisterPage />} />
 
+        {/* Rutas protegidas dentro del Layout */}
         <Route element={<AppLayout />}>
-          
           <Route path="/mercado" element={<MarketplacePage />} />
           <Route path="/coleccion" element={<ColeccionPage />} />
           <Route path="/AgregarC" element={<AgregarCPage />} /> 
           <Route path="/Perfil" element={<PerfilPage />} />  
           <Route path="/perfil/:usuarioId" element={<PerfilPublico />} /> 
-                    
         </Route>
+
+        {/* Ruta 404 */}
         <Route path="*" element={<h1 style={{ color: 'white', textAlign: 'center', marginTop: '2rem' }}>404 - Carta no encontrada</h1>} />
 
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

@@ -19,7 +19,6 @@ const AgregarCartaPage = () => {
   const [resultados, setResultados] = useState<ResultadoBusqueda[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // ✅ NUEVO: estados para el modal
   const [cartaSeleccionada, setCartaSeleccionada] = useState<ResultadoBusqueda | null>(null);
   const [cantidad, setCantidad] = useState(1);
   const [esFoil, setEsFoil] = useState(false);
@@ -70,21 +69,24 @@ const AgregarCartaPage = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, juegoActivo]);
 
-  // ✅ NUEVO: abre el modal y resetea los valores
   const handleSeleccionarCarta = (carta: ResultadoBusqueda) => {
     setCartaSeleccionada(carta);
     setCantidad(1);
     setEsFoil(false);
   };
 
-  // ✅ NUEVO: confirma y envía al backend
+  const handleRegresar = () => {
+    // Aquí puedes poner tu lógica de navegación, ej: navigate('/coleccion')
+    window.history.back();
+  };
+
   const handleConfirmarAgregar = async () => {
     if (!cartaSeleccionada || !user?.id) return;
 
     const dataParaBackend: CardPayload = {
       usuario_id: Number(user.id),
-      cantidad,         // ← dinámico
-      es_foil: esFoil,  // ← dinámico
+      cantidad,
+      es_foil: esFoil,
       carta: {
         api_id: cartaSeleccionada.api_id,
         juego: cartaSeleccionada.juego,
@@ -96,7 +98,7 @@ const AgregarCartaPage = () => {
     try {
       await agregarCartaAColeccion(dataParaBackend);
       alert(`¡"${cartaSeleccionada.nombre}" agregada!`);
-      setCartaSeleccionada(null); // cierra el modal
+      setCartaSeleccionada(null);
     } catch (error) {
       console.error("Error al guardar:", error);
       alert("Error al agregar la carta");
@@ -105,8 +107,14 @@ const AgregarCartaPage = () => {
 
   return (
     <div className={styles.agregarContainer}>
+      
+      {/* Botón de regresar en la esquina superior izquierda */}
+      <button className={styles.backBtn} onClick={handleRegresar}>
+        ← Volver a la Colección
+      </button>
 
-      <div className={`${styles.searchHeader} ${juegoActivo === 'magic' ? 'is-magic' : 'is-pokemon'}`}>
+      {/* Se corrigió la asignación de la clase del fondo dinámico haciendo match con el CSS module */}
+      <div className={`${styles.searchHeader} ${juegoActivo === 'magic' ? styles.bgMagic : styles.bgPokemon}`}>
         <h1>Buscar Cartas</h1>
         <div className={styles.gameToggle}>
           <button
@@ -150,7 +158,7 @@ const AgregarCartaPage = () => {
             <span className={styles.cardSet}>{carta.set_name}</span>
             <button
               className={styles.addBtn}
-              onClick={() => handleSeleccionarCarta(carta)} // ✅ abre modal
+              onClick={() => handleSeleccionarCarta(carta)}
             >
               + Agregar a Colección
             </button>
@@ -158,7 +166,7 @@ const AgregarCartaPage = () => {
         ))}
       </div>
 
-      {/* ✅ NUEVO: Modal de cantidad y foil */}
+      {/* Modal de cantidad y foil */}
       {cartaSeleccionada && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
